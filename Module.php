@@ -416,44 +416,41 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::Anonymous);
 		
-		if ($this->checkStorageType($aArgs['Type']))
+		$iUserId = null;
+
+		$oMinDecorator =  $this->getMinModuleDecorator();
+		if ($oMinDecorator)
 		{
-			$iUserId = null;
-
-			$oMinDecorator =  $this->getMinModuleDecorator();
-			if ($oMinDecorator)
+			$mMin = $oMinDecorator->GetMinByHash($aArgs['Hash']);
+			if (!empty($mMin['__hash__']))
 			{
-				$mMin = $oMinDecorator->GetMinByHash($aArgs['Hash']);
-				if (!empty($mMin['__hash__']))
+				$iUserId = $mMin['UserId'];
+				if ($iUserId)
 				{
-					$iUserId = $mMin['UserId'];
-					if ($iUserId)
+					$sUUID = \Aurora\System\Api::getUserUUIDById($iUserId);
+					$aItems = array();
+					$sMinPath = implode('/', array($mMin['Path'], $mMin['Name']));
+					$Path = $aArgs['Path'];
+					$mPos = strpos($Path, $sMinPath);
+					if ($mPos === 0 || $Path === '')
 					{
-						$sUUID = \Aurora\System\Api::getUserUUIDById($iUserId);
-						$aItems = array();
-						$sMinPath = implode('/', array($mMin['Path'], $mMin['Name']));
-						$Path = $aArgs['Path'];
-						$mPos = strpos($Path, $sMinPath);
-						if ($mPos === 0 || $Path === '')
+						if ($mPos !== 0)
 						{
-							if ($mPos !== 0)
-							{
-								$Path =  $sMinPath . $Path;
-							}
-							$Path = str_replace('.', '', $Path);
-							try
-							{
-								$aItems = $this->oApiFilesManager->getFiles($sUUID, $mMin['Type'], $Path, '', $aArgs['Hash']);
-							}
-							catch (\Exception $oEx)
-							{
-								$aItems = array();
-							}
+							$Path =  $sMinPath . $Path;
 						}
-						$mResult['Items'] = $aItems;
-
-	//					$oResult['Quota'] = $this->GetQuota($iUserId);
+						$Path = str_replace('.', '', $Path);
+						try
+						{
+							$aItems = $this->oApiFilesManager->getFiles($sUUID, $mMin['Type'], $Path, '', $aArgs['Hash']);
+						}
+						catch (\Exception $oEx)
+						{
+							$aItems = array();
+						}
 					}
+					$mResult['Items'] = $aItems;
+
+//					$oResult['Quota'] = $this->GetQuota($iUserId);
 				}
 			}
 		}
