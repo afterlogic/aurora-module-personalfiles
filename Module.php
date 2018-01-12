@@ -38,7 +38,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function init() 
 	{
 		ini_set( 'default_charset', 'UTF-8' ); //support for cyrillic characters in file names
-		$this->oApiFilesManager = new \Aurora\Modules\Files\Manager($this);
+		$this->oApiFilesManager = new Manager($this);
 		
 		$this->subscribeEvent('Files::GetFile', array($this, 'onGetFile'));
 		$this->subscribeEvent('Files::CreateFile', array($this, 'onCreateFile'));
@@ -58,7 +58,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Files::CreateLink::after', array($this, 'onAfterCreateLink'));
 		$this->subscribeEvent('Files::CreatePublicLink::after', array($this, 'onAfterCreatePublicLink'));
 		$this->subscribeEvent('Files::GetFileContent::after', array($this, 'onAfterGetFileContent'));
-
+		$this->subscribeEvent('Files::IsFileExists::after', array($this, 'onAfterIsFileExists'));
 		$this->subscribeEvent('Files::PopulateFileItem', array($this, 'onPopulateFileItem'));
 
 		$this->subscribeEvent('Core::AfterDeleteUser', array($this, 'onAfterDeleteUser'));
@@ -388,41 +388,44 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::Anonymous);
 		
-		$iUserId = null;
-
-		$oMinDecorator =  $this->getMinModuleDecorator();
-		if ($oMinDecorator)
+		if ($this->checkStorageType($aArgs['Type']))
 		{
-			$mMin = $oMinDecorator->GetMinByHash($aArgs['Hash']);
-			if (!empty($mMin['__hash__']))
-			{
-				$iUserId = $mMin['UserId'];
-				if ($iUserId)
-				{
-					$sUUID = \Aurora\System\Api::getUserUUIDById($iUserId);
-					$aItems = array();
-					$sMinPath = implode('/', array($mMin['Path'], $mMin['Name']));
-					$Path = $aArgs['Path'];
-					$mPos = strpos($Path, $sMinPath);
-					if ($mPos === 0 || $Path === '')
-					{
-						if ($mPos !== 0)
-						{
-							$Path =  $sMinPath . $Path;
-						}
-						$Path = str_replace('.', '', $Path);
-						try
-						{
-							$aItems = $this->oApiFilesManager->getFiles($sUUID, $mMin['Type'], $Path, '', $aArgs['Hash']);
-						}
-						catch (\Exception $oEx)
-						{
-							$aItems = array();
-						}
-					}
-					$mResult['Items'] = $aItems;
+			$iUserId = null;
 
-//					$oResult['Quota'] = $this->GetQuota($iUserId);
+			$oMinDecorator =  $this->getMinModuleDecorator();
+			if ($oMinDecorator)
+			{
+				$mMin = $oMinDecorator->GetMinByHash($aArgs['Hash']);
+				if (!empty($mMin['__hash__']))
+				{
+					$iUserId = $mMin['UserId'];
+					if ($iUserId)
+					{
+						$sUUID = \Aurora\System\Api::getUserUUIDById($iUserId);
+						$aItems = array();
+						$sMinPath = implode('/', array($mMin['Path'], $mMin['Name']));
+						$Path = $aArgs['Path'];
+						$mPos = strpos($Path, $sMinPath);
+						if ($mPos === 0 || $Path === '')
+						{
+							if ($mPos !== 0)
+							{
+								$Path =  $sMinPath . $Path;
+							}
+							$Path = str_replace('.', '', $Path);
+							try
+							{
+								$aItems = $this->oApiFilesManager->getFiles($sUUID, $mMin['Type'], $Path, '', $aArgs['Hash']);
+							}
+							catch (\Exception $oEx)
+							{
+								$aItems = array();
+							}
+						}
+						$mResult['Items'] = $aItems;
+
+	//					$oResult['Quota'] = $this->GetQuota($iUserId);
+					}
 				}
 			}
 		}
@@ -559,22 +562,25 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-		$Type = $aArgs['Type'];
-		$UserId = $aArgs['UserId'];
-		$Path = $aArgs['Path'];
-		$Name = $aArgs['Name'];
-		$Link = $aArgs['Link'];
-		
-		if (substr($Link, 0, 11) === 'javascript:')
+		if ($this->checkStorageType($aArgs['Type']))
 		{
-			$Link = substr($Link, 11);
-		}
-		
-		$sUUID = \Aurora\System\Api::getUserUUIDById($UserId);
-		if ($this->checkStorageType($Type))
-		{
-			$Name = \trim(\MailSo\Base\Utils::ClearFileName($Name));
-			$mResult = $this->oApiFilesManager->createLink($sUUID, $Type, $Path, $Link, $Name);
+			$Type = $aArgs['Type'];
+			$UserId = $aArgs['UserId'];
+			$Path = $aArgs['Path'];
+			$Name = $aArgs['Name'];
+			$Link = $aArgs['Link'];
+
+			if (substr($Link, 0, 11) === 'javascript:')
+			{
+				$Link = substr($Link, 11);
+			}
+
+			$sUUID = \Aurora\System\Api::getUserUUIDById($UserId);
+			if ($this->checkStorageType($Type))
+			{
+				$Name = \trim(\MailSo\Base\Utils::ClearFileName($Name));
+				$mResult = $this->oApiFilesManager->createLink($sUUID, $Type, $Path, $Link, $Name);
+			}
 		}
 	}
 
@@ -967,17 +973,20 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function onAfterCreatePublicLink($aArgs, &$mResult)
 	{
-		$UserId = $aArgs['UserId'];
-		$Type = $aArgs['Type'];
-		$Path = $aArgs['Path'];
-		$Name = $aArgs['Name'];
-		$Size = $aArgs['Size'];
-		$IsFolder = $aArgs['IsFolder'];
-		
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		$sUUID = \Aurora\System\Api::getUserUUIDById($UserId);
-		$bFolder = (bool)$IsFolder;
-		$mResult = $this->oApiFilesManager->createPublicLink($sUUID, $Type, $Path, $Name, $Size, $bFolder);
+		if ($this->checkStorageType($aArgs['Type']))
+		{
+			$UserId = $aArgs['UserId'];
+			$Type = $aArgs['Type'];
+			$Path = $aArgs['Path'];
+			$Name = $aArgs['Name'];
+			$Size = $aArgs['Size'];
+			$IsFolder = $aArgs['IsFolder'];
+
+			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+			$sUUID = \Aurora\System\Api::getUserUUIDById($UserId);
+			$bFolder = (bool)$IsFolder;
+			$mResult = $this->oApiFilesManager->createPublicLink($sUUID, $Type, $Path, $Name, $Size, $bFolder);
+		}
 	}	
 	
 	/**
@@ -1042,17 +1051,35 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function onAfterDeletePublicLink($aArgs, &$mResult)
 	{
-		$UserId = $aArgs['UserId'];
-		$Type = $aArgs['Type'];
-		$Path = $aArgs['Path'];
-		$Name = $aArgs['Name'];
+		if ($this->checkStorageType($aArgs['Type']))
+		{
+			$UserId = $aArgs['UserId'];
+			$Type = $aArgs['Type'];
+			$Path = $aArgs['Path'];
+			$Name = $aArgs['Name'];
 
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
-		$sUUID = \Aurora\System\Api::getUserUUIDById($UserId);
-		
-		$mResult = $this->oApiFilesManager->deletePublicLink($sUUID, $Type, $Path, $Name);
+			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+
+			$sUUID = \Aurora\System\Api::getUserUUIDById($UserId);
+
+			$mResult = $this->oApiFilesManager->deletePublicLink($sUUID, $Type, $Path, $Name);
+		}
 	}
+	
+	public function onAfterIsFileExists($aArgs, &$mResult)
+	{
+		if ($this->checkStorageType($aArgs['Type']))
+		{
+			$UserId = $aArgs['UserId'];
+			$Type = $aArgs['Type'];
+			$Path = $aArgs['Path'];
+			$Name = $aArgs['Name'];
+
+			$sUUID = \Aurora\System\Api::getUserUUIDById($UserId);
+			$mResult = $this->oApiFilesManager->isFileExists($sUUID, $Type, $Path, $Name);
+		}
+	}
+	
 
 	/***** public functions might be called with web API *****/
 }
