@@ -59,7 +59,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Files::CreatePublicLink::after', array($this, 'onAfterCreatePublicLink'));
 		$this->subscribeEvent('Files::GetFileContent::after', array($this, 'onAfterGetFileContent'));
 		$this->subscribeEvent('Files::IsFileExists::after', array($this, 'onAfterIsFileExists'));
-		$this->subscribeEvent('Files::PopulateFileItem', array($this, 'onPopulateFileItem'));
+		$this->subscribeEvent('PopulateFileItem', array($this, 'onPopulateFileItem'));
 
 		$this->subscribeEvent('Core::AfterDeleteUser', array($this, 'onAfterDeleteUser'));
 	}
