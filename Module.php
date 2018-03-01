@@ -1093,7 +1093,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	
 	public function onAfterIsFileExists($aArgs, &$mResult)
 	{
-		if ($this->checkStorageType($aArgs['Type']))
+		if (isset($aArgs['Type']) && $this->checkStorageType($aArgs['Type']))
 		{
 			$UserId = $aArgs['UserId'];
 			$Type = $aArgs['Type'];
