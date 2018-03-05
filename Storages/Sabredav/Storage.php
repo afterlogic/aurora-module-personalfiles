@@ -100,9 +100,14 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$sRootPath = null;
 		if ($iUserId)
 		{
-			$sUser = $bUser ? '/' . $iUserId : '';
-			$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
+			$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
+			$oUser = $oCoreDecorator->GetUserByPublicId($iUserId);
+			if ($oUser)
+			{
+				$sUser = $bUser ? '/' . $oUser->UUID : '';
+				$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
 					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL . $sUser;
+			}
 
 			if ($sType === \Aurora\System\Enums\FileStorageType::Corporate)
 			{
