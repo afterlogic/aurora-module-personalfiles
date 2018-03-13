@@ -180,7 +180,7 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 		{
 			if (!isset($aUsers[$oFile->Owner]))
 			{
-				$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUser($oFile->Owner);
+				$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId($oFile->Owner);
 				$aUsers[$oFile->Owner] = $oUser ? $oUser->PublicId : '';
 			}
 			$oFile->Owner = $aUsers[$oFile->Owner];
