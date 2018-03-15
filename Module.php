@@ -194,27 +194,29 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			if (!empty($aArgs['Url']))
 			{
-//				$sUrl = \Aurora\System\Utils::GetRemoteFileRealUrl($aArgs['Url']);
 				$sUrl = $aArgs['Url'];
 				if ($sUrl)
 				{
 					$aRemoteFileInfo = \Aurora\System\Utils::GetRemoteFileInfo($sUrl);
-					$sFileName = basename($sUrl);
-					$sFileExtension = \Aurora\System\Utils::GetFileExtension($sFileName);
-
-					if (empty($sFileExtension))
+					if ((int)$aRemoteFileInfo['code'] > 0)
 					{
-						$sFileExtension = \Aurora\System\Utils::GetFileExtensionFromMimeContentType($aRemoteFileInfo['content-type']);
-						$sFileName .= '.'.$sFileExtension;
-					}
+						$sFileName = basename($sUrl);
+						$sFileExtension = \Aurora\System\Utils::GetFileExtension($sFileName);
 
-					if ($sFileExtension === 'htm' || $sFileExtension === 'html')
-					{
-						$sTitle = $this->getHtmlTitle($sUrl);
-					}
+						if (empty($sFileExtension))
+						{
+							$sFileExtension = \Aurora\System\Utils::GetFileExtensionFromMimeContentType($aRemoteFileInfo['content-type']);
+							$sFileName .= '.'.$sFileExtension;
+						}
 
-					$mResult['Name'] = isset($sTitle) && strlen($sTitle)> 0 ? $sTitle : urldecode($sFileName);
-					$mResult['Size'] = $aRemoteFileInfo['size'];
+						if ($sFileExtension === 'htm' || $sFileExtension === 'html')
+						{
+							$sTitle = $this->getHtmlTitle($sUrl);
+						}
+
+						$mResult['Name'] = isset($sTitle) && strlen($sTitle)> 0 ? $sTitle : urldecode($sFileName);
+						$mResult['Size'] = $aRemoteFileInfo['size'];
+					}
 				}
 			}
 		}		
