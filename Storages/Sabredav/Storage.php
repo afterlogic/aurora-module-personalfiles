@@ -20,25 +20,9 @@ namespace Aurora\Modules\PersonalFiles\Storages\Sabredav;
 class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 {
 	/**
-	 * @var bool
-	 */
-	protected $initialized;
-	
-	/**
 	 * @var $oApiMinManager \CApiMinManager
 	 */
 	protected $oApiMinManager = null;
-
-	/**
-	 * 
-	 * @param \Aurora\System\Managers\AbstractManager $oManager
-	 */
-	public function __construct(\Aurora\System\Managers\AbstractManager &$oManager)
-	{
-		parent::__construct($oManager);
-		
-		$this->initialized = false;
-	}
 
 	/**
 	 * @param \Aurora\Modules\StandardAuth\Classes\Account|CHelpdeskUser $iUserId
@@ -66,27 +50,6 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		
 		return $this->oApiMinManager;
 	}
-	
-	/**
-	 * @param int $iUserId
-	 *
-	 * @return bool
-	 */
-	public function init($iUserId)
-	{
-		$bResult = false;
-		if ($iUserId) 
-		{
-			if (!$this->initialized) 
-			{
-				\Afterlogic\DAV\Server::getInstance()->setUser($iUserId);
-				$this->initialized = true;
-			}
-			$bResult = true;
-		}
-		
-		return $bResult;
-	}	
 
 	/**
 	 * @param int $iUserId
@@ -150,19 +113,14 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			{
 				$oDirectory = new \Afterlogic\DAV\FS\RootCorporate($sRootPath);
 			} 
-			else if 
-			($sType === \Aurora\System\Enums\FileStorageType::Shared) 
+			else if ($sType === \Aurora\System\Enums\FileStorageType::Shared) 
 			{
 				$oDirectory = new \Afterlogic\DAV\FS\RootShared($sRootPath);
 			}
 			
-			if ($oDirectory) 
+			if ($oDirectory && !empty($sPath)) 
 			{
-				$oDirectory->setUser($iUserId);
-				if ($sPath !== '') 
-				{
-					$oDirectory = $oDirectory->getChild($sPath);
-				}
+				$oDirectory = $oDirectory->getChild($sPath);
 			}
 		}
 
@@ -180,18 +138,15 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	public function isFileExists($iUserId, $sType, $sPath, $sName)
 	{
 		$bResult = false;
-		if ($this->init($iUserId))
+		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
+		if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
 		{
-			$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
-			if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
+			if($oDirectory->childExists($sName))
 			{
-				if($oDirectory->childExists($sName))
+				$oItem = $oDirectory->getChild($sName);
+				if ($oItem instanceof \Afterlogic\DAV\FS\File)
 				{
-					$oItem = $oDirectory->getChild($sName);
-					if ($oItem instanceof \Afterlogic\DAV\FS\File)
-					{
-						$bResult = true;
-					}
+					$bResult = true;
 				}
 			}
 		}
@@ -210,14 +165,11 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	public function getSharedFile($iUserId, $sType, $sPath, $sName)
 	{
 		$sResult = null;
-		if ($this->init($iUserId))
+		$sRootPath = $this->getRootPath($iUserId, $sType, true);
+		$FilePath = $sRootPath . '/' . $sPath . '/' . $sName;
+		if (file_exists($FilePath))
 		{
-			$sRootPath = $this->getRootPath($iUserId, $sType, true);
-			$FilePath = $sRootPath . '/' . $sPath . '/' . $sName;
-			if (file_exists($FilePath))
-			{
-				$sResult = fopen($FilePath, 'r');
-			}
+			$sResult = fopen($FilePath, 'r');
 		}
 		
 		return $sResult;
@@ -234,122 +186,119 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	public function getFileInfo($iUserId, $sType, $oItem, $sPublicHash = null)
 	{
 		$oResult = null;
-		if ($this->init($iUserId))
+		if ($oItem !== null)
 		{
-			if ($oItem !== null)
+			$oMin = $this->getApiMinManager();
+			$sRootPath = $this->getRootPath($iUserId, $sType, true);
+			$sFilePath = str_replace($sRootPath, '', dirname($oItem->getPath()));
+			if ($oItem instanceof \Afterlogic\DAV\FS\File)
 			{
-				$oMin = $this->getApiMinManager();
-				$sRootPath = $this->getRootPath($iUserId, $sType, true);
-				$sFilePath = str_replace($sRootPath, '', dirname($oItem->getPath()));
-				if ($oItem instanceof \Afterlogic\DAV\FS\File)
+				$aProps = $oItem->getProperties(
+					array(
+						'Owner', 
+						'Shared', 
+						'Name' ,
+						'Link', 
+						'ExtendedProps'
+					)
+				);
+			}
+			$oResult /*@var $oResult \Aurora\Modules\Files\Classes\FileItem */ = new  \Aurora\Modules\Files\Classes\FileItem();
+
+			$oResult->Type = $sType;
+			$oResult->TypeStr = $sType;
+			$oResult->RealPath = $oItem->getPath();
+			$oResult->Path = $sFilePath;
+			$oResult->Name = $oItem->getName();
+			$oResult->Id = $oItem->getName();
+			$oResult->FullPath = $oResult->Name !== '' ? $oResult->Path . '/' . $oResult->Name : $oResult->Path ;
+
+			$sID = '';
+			if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
+			{
+				$sID = $this->generateHashId($iUserId, $sType, $sFilePath, $oItem->getName());
+				$oResult->IsFolder = true;
+				$oResult->AddAction([
+					'list' => []
+				]);
+			}
+
+			if ($oItem instanceof \Afterlogic\DAV\FS\File)
+			{
+				$oResult->AddAction([
+					'view' => [
+						'url' => '?download-file/' . $oResult->getHash($sPublicHash) .'/view'
+					]
+				]);
+				$sID = $this->generateHashId($iUserId, $sType, $sFilePath, $oItem->getName());
+				$oResult->IsFolder = false;
+				$oResult->Size = $oItem->getSize();
+
+				$aPathInfo = pathinfo($oResult->Name);
+				if (isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url')
 				{
-					$aProps = $oItem->getProperties(
-						array(
-							'Owner', 
-							'Shared', 
-							'Name' ,
-							'Link', 
-							'ExtendedProps'
-						)
-					);
-				}
-				$oResult /*@var $oResult \Aurora\Modules\Files\Classes\FileItem */ = new  \Aurora\Modules\Files\Classes\FileItem();
-
-				$oResult->Type = $sType;
-				$oResult->TypeStr = $sType;
-				$oResult->RealPath = $oItem->getPath();
-				$oResult->Path = $sFilePath;
-				$oResult->Name = $oItem->getName();
-				$oResult->Id = $oItem->getName();
-				$oResult->FullPath = $oResult->Name !== '' ? $oResult->Path . '/' . $oResult->Name : $oResult->Path ;
-
-				$sID = '';
-				if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
-				{
-					$sID = $this->generateHashId($iUserId, $sType, $sFilePath, $oItem->getName());
-					$oResult->IsFolder = true;
-					$oResult->AddAction([
-						'list' => []
-					]);
-				}
-
-				if ($oItem instanceof \Afterlogic\DAV\FS\File)
-				{
-					$oResult->AddAction([
-						'view' => [
-							'url' => '?download-file/' . $oResult->getHash($sPublicHash) .'/view'
-						]
-					]);
-					$sID = $this->generateHashId($iUserId, $sType, $sFilePath, $oItem->getName());
-					$oResult->IsFolder = false;
-					$oResult->Size = $oItem->getSize();
-
-					$aPathInfo = pathinfo($oResult->Name);
-					if (isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url')
+					$aUrlFileInfo = \Aurora\System\Utils::parseIniString(stream_get_contents($oItem->get()));
+					if ($aUrlFileInfo && isset($aUrlFileInfo['URL']))
 					{
-						$aUrlFileInfo = \Aurora\System\Utils::parseIniString(stream_get_contents($oItem->get()));
-						if ($aUrlFileInfo && isset($aUrlFileInfo['URL']))
-						{
-							$oResult->IsLink = true;
-							$oResult->LinkUrl = $aUrlFileInfo['URL'];
-							$oResult->AddAction([
-								'open' => [
-									'url' => $aUrlFileInfo['URL']
-								]
-							]);
-						}
-						else
-						{
-							$oResult->AddAction([
-								'download' => [
-									'url' => '?download-file/' . $oResult->getHash($sPublicHash)
-								]
-							]);						
-						}
-						if (!$oResult->ContentType && isset($aPathInfo['filename']))
-						{
-							$oResult->ContentType = \Aurora\System\Utils::MimeContentType($aPathInfo['filename']);
-						}							
+						$oResult->IsLink = true;
+						$oResult->LinkUrl = $aUrlFileInfo['URL'];
+						$oResult->AddAction([
+							'open' => [
+								'url' => $aUrlFileInfo['URL']
+							]
+						]);
 					}
-					else						
+					else
 					{
 						$oResult->AddAction([
 							'download' => [
 								'url' => '?download-file/' . $oResult->getHash($sPublicHash)
 							]
-						]);
-						$oResult->ContentType = $oItem->getContentType();
+						]);						
 					}
-
-					$aArgs = array(
-						'UserId' => $iUserId
-					);
-					$this->oManager->GetModule()->broadcastEvent(
-						'PopulateFileItem', 
-						$aArgs,
-						$oResult
-					);
-
-					$oResult->LastModified = $oItem->getLastModified();
-					if (!$oResult->ContentType)
+					if (!$oResult->ContentType && isset($aPathInfo['filename']))
 					{
-						$oResult->ContentType = \Aurora\System\Utils::MimeContentType($oResult->Name);
-					}
-
-					$oSettings =& \Aurora\System\Api::GetSettings();
-					if ($oSettings->GetConf('AllowThumbnail', true) && !$oResult->Thumb)
-					{
-						$iThumbnailLimit = ((int) $oSettings->GetConf('ThumbnailMaxFileSizeMb', 5)) * 1024 * 1024;
-						$oResult->Thumb = $oResult->Size < $iThumbnailLimit && \Aurora\System\Utils::IsGDImageMimeTypeSuppoted($oResult->ContentType, $oResult->Name);
-					}
+						$oResult->ContentType = \Aurora\System\Utils::MimeContentType($aPathInfo['filename']);
+					}							
+				}
+				else						
+				{
+					$oResult->AddAction([
+						'download' => [
+							'url' => '?download-file/' . $oResult->getHash($sPublicHash)
+						]
+					]);
+					$oResult->ContentType = $oItem->getContentType();
 				}
 
-				$mMin = $oMin->getMinByID($sID);
+				$aArgs = array(
+					'UserId' => $iUserId
+				);
+				$this->oManager->GetModule()->broadcastEvent(
+					'PopulateFileItem', 
+					$aArgs,
+					$oResult
+				);
 
-				$oResult->Shared = isset($aProps['Shared']) ? $aProps['Shared'] : empty($mMin['__hash__']) ? false : true;
-				$oResult->Owner = isset($aProps['Owner']) ? $aProps['Owner'] : $iUserId;
-				$oResult->ExtendedProps = isset($aProps['ExtendedProps']) ? $aProps['ExtendedProps'] : false;
+				$oResult->LastModified = $oItem->getLastModified();
+				if (!$oResult->ContentType)
+				{
+					$oResult->ContentType = \Aurora\System\Utils::MimeContentType($oResult->Name);
+				}
+
+				$oSettings =& \Aurora\System\Api::GetSettings();
+				if ($oSettings->GetConf('AllowThumbnail', true) && !$oResult->Thumb)
+				{
+					$iThumbnailLimit = ((int) $oSettings->GetConf('ThumbnailMaxFileSizeMb', 5)) * 1024 * 1024;
+					$oResult->Thumb = $oResult->Size < $iThumbnailLimit && \Aurora\System\Utils::IsGDImageMimeTypeSuppoted($oResult->ContentType, $oResult->Name);
+				}
 			}
+
+			$mMin = $oMin->getMinByID($sID);
+
+			$oResult->Shared = isset($aProps['Shared']) ? $aProps['Shared'] : empty($mMin['__hash__']) ? false : true;
+			$oResult->Owner = isset($aProps['Owner']) ? $aProps['Owner'] : $iUserId;
+			$oResult->ExtendedProps = isset($aProps['ExtendedProps']) ? $aProps['ExtendedProps'] : false;
 		}
 
 		return $oResult;
@@ -365,13 +314,10 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	public function getDirectoryInfo($iUserId, $sType, $sPath)
 	{
 		$sResult = null;
-		if ($this->init($iUserId))
+		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
+		if ($oDirectory !== null && $oDirectory instanceof \Afterlogic\DAV\FS\Directory)
 		{
-			$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
-			if ($oDirectory !== null && $oDirectory instanceof \Afterlogic\DAV\FS\Directory)
-			{
-				$sResult = $oDirectory->getChildrenProperties();
-			}
+			$sResult = $oDirectory->getChildrenProperties();
 		}
 
 		return $sResult;
@@ -388,16 +334,13 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	public function getFile($iUserId, $sType, $sPath, $sName)
 	{
 		$sResult = null;
-		if ($this->init($iUserId))
+		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
+		if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
 		{
-			$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
-			if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
+			$oItem = $oDirectory->getChild($sName);
+			if ($oItem instanceof \Afterlogic\DAV\FS\File)
 			{
-				$oItem = $oDirectory->getChild($sName);
-				if ($oItem instanceof \Afterlogic\DAV\FS\File)
-				{
-					$sResult = $oItem->get();
-				}
+				$sResult = $oItem->get();
 			}
 		}
 
@@ -475,40 +418,37 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$aItems = array();
 		$aResult = array();
 		
-		if ($this->init($iUserId))
+		$oTenant = null;
+		$oApiTenants = false; //\Aurora\System\Api::GetCoreManager('tenants');
+		if ($oApiTenants)
 		{
-			$oTenant = null;
-			$oApiTenants = false; //\Aurora\System\Api::GetCoreManager('tenants');
-			if ($oApiTenants)
-			{
-				$oTenant = /*(0 < $oAccount->IdTenant) ? $oApiTenants->getTenantById($oAccount->IdTenant) :*/
-					$oApiTenants->getDefaultGlobalTenant();
-			}
+			$oTenant = /*(0 < $oAccount->IdTenant) ? $oApiTenants->getTenantById($oAccount->IdTenant) :*/
+				$oApiTenants->getDefaultGlobalTenant();
+		}
 
-			$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
-			if ($oDirectory !== null && $oDirectory instanceof \Afterlogic\DAV\FS\Directory)
+		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
+		if ($oDirectory !== null && $oDirectory instanceof \Afterlogic\DAV\FS\Directory)
+		{
+			if (!empty($sPattern) || is_numeric($sPattern))
 			{
-				if (!empty($sPattern) || is_numeric($sPattern))
+				$aItems = $oDirectory->Search($sPattern);
+				$aDirectoryInfo = $oDirectory->getChildrenProperties();
+				foreach ($aDirectoryInfo as $oDirectoryInfo)
 				{
-					$aItems = $oDirectory->Search($sPattern);
-					$aDirectoryInfo = $oDirectory->getChildrenProperties();
-					foreach ($aDirectoryInfo as $oDirectoryInfo)
+					if (isset($oDirectoryInfo['Link']) && strpos($oDirectoryInfo['Name'], $sPattern) !== false)
 					{
-						if (isset($oDirectoryInfo['Link']) && strpos($oDirectoryInfo['Name'], $sPattern) !== false)
-						{
-							$aItems[] = new \Afterlogic\DAV\FS\File($oDirectory->getPath() . '/' . $oDirectoryInfo['@Name']);
-						}
+						$aItems[] = new \Afterlogic\DAV\FS\File($oDirectory->getPath() . '/' . $oDirectoryInfo['@Name']);
 					}
 				}
-				else
-				{
-					$aItems = $oDirectory->getChildren();
-				}
+			}
+			else
+			{
+				$aItems = $oDirectory->getChildren();
+			}
 
-				foreach ($aItems as $oItem) 
-				{
-					$aResult[] = $this->getFileInfo($iUserId, $sType, $oItem, $sPublicHash);
-				}
+			foreach ($aItems as $oItem) 
+			{
+				$aResult[] = $this->getFileInfo($iUserId, $sType, $oItem, $sPublicHash);
 			}
 		}
 		
@@ -525,15 +465,12 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 */
 	public function createFolder($iUserId, $sType, $sPath, $sFolderName)
 	{
-		if ($this->init($iUserId))
-		{
-			$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
+		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
 
-			if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
-			{
-				$oDirectory->createDirectory($sFolderName);
-				return true;
-			}
+		if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
+		{
+			$oDirectory->createDirectory($sFolderName);
+			return true;
 		}
 
 		return false;
@@ -550,25 +487,22 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 */
 	public function createLink($iUserId, $sType, $sPath, $sLink, $sName)
 	{
-		if ($this->init($iUserId))
-		{
-			$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
+		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
 
-			if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
-			{
-				$sFileName = $sName . '.url';
-				
-				$oDirectory->createFile(
-					$sFileName, 
-					"[InternetShortcut]\r\nURL=\"" . $sLink . "\"\r\n"
-				);
-				$oItem = $oDirectory->getChild($sFileName);
-				$oItem->updateProperties(array(
-					'Owner' => $iUserId
-				));
-				
-				return true;
-			}
+		if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
+		{
+			$sFileName = $sName . '.url';
+
+			$oDirectory->createFile(
+				$sFileName, 
+				"[InternetShortcut]\r\nURL=\"" . $sLink . "\"\r\n"
+			);
+			$oItem = $oDirectory->getChild($sFileName);
+			$oItem->updateProperties(array(
+				'Owner' => $iUserId
+			));
+
+			return true;
 		}
 
 		return false;
@@ -585,15 +519,12 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 */
 	public function createFile($iUserId, $sType, $sPath, $sFileName, $sData, $rangeType, $offset, $extendedProps = [])
 	{
-		if ($this->init($iUserId))
-		{
-			$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
+		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
 
-			if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
-			{
-				$oDirectory->createFile($sFileName, $sData, $rangeType, $offset, $extendedProps);
-				return true;
-			}
+		if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
+		{
+			$oDirectory->createFile($sFileName, $sData, $rangeType, $offset, $extendedProps);
+			return true;
 		}
 
 		return false;
@@ -609,19 +540,16 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 */
 	public function delete($iUserId, $sType, $sPath, $sName)
 	{
-		if ($this->init($iUserId))
+		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
+		$oItem = $oDirectory->getChild($sName);
+		if ($oItem !== null)
 		{
-			$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
-			$oItem = $oDirectory->getChild($sName);
-			if ($oItem !== null)
+			if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
 			{
-				if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
-				{
-					$this->updateMin($iUserId, $sType, $sPath, $sName, $sName, $oItem, true);
-				}
-				$oItem->delete();
-				return true;
+				$this->updateMin($iUserId, $sType, $sPath, $sName, $sName, $oItem, true);
 			}
+			$oItem->delete();
+			return true;
 		}
 
 		return false;
@@ -693,20 +621,17 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 */
 	public function rename($iUserId, $sType, $sPath, $sName, $sNewName)
 	{
-		if ($this->init($iUserId))
+		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
+		if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
 		{
-			$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
-			if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
+			$oItem = $oDirectory->getChild($sName);
+			if ($oItem !== null)
 			{
-				$oItem = $oDirectory->getChild($sName);
-				if ($oItem !== null)
+				if (strlen($sNewName) < 200)
 				{
-					if (strlen($sNewName) < 200)
-					{
-						$this->updateMin($iUserId, $sType, $sPath, $sName, $sNewName, $oItem);
-						$oItem->setName($sNewName);
-						return true;
-					}
+					$this->updateMin($iUserId, $sType, $sPath, $sName, $sNewName, $oItem);
+					$oItem->setName($sNewName);
+					return true;
 				}
 			}
 		}
@@ -724,18 +649,15 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 */
 	public function renameLink($iUserId, $sType, $sPath, $sName, $sNewName)
 	{
-		if ($this->init($iUserId))
-		{
-			$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
-			$oItem = $oDirectory->getChild($sName);
+		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
+		$oItem = $oDirectory->getChild($sName);
 
-			if ($oItem)
-			{
-				$oItem->updateProperties(array(
-					'Name' => $sNewName
-				));
-				return true;
-			}
+		if ($oItem)
+		{
+			$oItem->updateProperties(array(
+				'Name' => $sNewName
+			));
+			return true;
 		}
 		return false;
 	}
@@ -754,87 +676,84 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 */
 	public function copy($iUserId, $sFromType, $sToType, $sFromPath, $sToPath, $sName, $sNewName, $bMove = false)
 	{
-		if ($this->init($iUserId))
+		$oApiMinManager = $this->getApiMinManager();
+
+		if (empty($sNewName) && !is_numeric($sNewName))
 		{
-			$oApiMinManager = $this->getApiMinManager();
+			$sNewName = $sName;
+		}
 
-			if (empty($sNewName) && !is_numeric($sNewName))
+		$sFromRootPath = $this->getRootPath($iUserId, $sFromType, true);
+		$sToRootPath = $this->getRootPath($iUserId, $sToType, true);
+
+		$oFromDirectory = $this->getDirectory($iUserId, $sFromType, $sFromPath);
+		$oToDirectory = $this->getDirectory($iUserId, $sToType, $sToPath);
+
+		if ($oToDirectory && $oFromDirectory)
+		{
+			$oItem = $oFromDirectory->getChild($sName);
+			if ($oItem !== null)
 			{
-				$sNewName = $sName;
-			}
-
-			$sFromRootPath = $this->getRootPath($iUserId, $sFromType, true);
-			$sToRootPath = $this->getRootPath($iUserId, $sToType, true);
-
-			$oFromDirectory = $this->getDirectory($iUserId, $sFromType, $sFromPath);
-			$oToDirectory = $this->getDirectory($iUserId, $sToType, $sToPath);
-
-			if ($oToDirectory && $oFromDirectory)
-			{
-				$oItem = $oFromDirectory->getChild($sName);
-				if ($oItem !== null)
+				if ($oItem instanceof \Afterlogic\DAV\FS\File)
 				{
-					if ($oItem instanceof \Afterlogic\DAV\FS\File)
+					$oToDirectory->createFile($sNewName, $oItem->get());
+
+					$oItemNew = $oToDirectory->getChild($sNewName);
+					$aProps = $oItem->getProperties(array());
+					if (!$bMove)				
 					{
-						$oToDirectory->createFile($sNewName, $oItem->get());
-
-						$oItemNew = $oToDirectory->getChild($sNewName);
-						$aProps = $oItem->getProperties(array());
-						if (!$bMove)				
-						{
-							$aProps['Owner'] = $iUserId;
-						}
-						else
-						{
-							$sChildPath = substr(dirname($oItem->getPath()), strlen($sFromRootPath));
-							$sID = $this->generateHashId($iUserId, $sFromType, $sChildPath, $oItem->getName());
-
-							$sNewChildPath = substr(dirname($oItemNew->getPath()), strlen($sToRootPath));
-
-							$mMin = $oApiMinManager->getMinByID($sID);
-							if (!empty($mMin['__hash__']))
-							{
-								$sNewID = $this->generateHashId($iUserId, $sToType, $sNewChildPath, $oItemNew->getName());
-
-								$mMin['Path'] = $sNewChildPath;
-								$mMin['Type'] = $sToType;
-								$mMin['Name'] = $oItemNew->getName();
-
-								$oApiMinManager->updateMinByID($sID, $mMin, $sNewID);
-							}					
-						}
-						$oItemNew->updateProperties($aProps);
+						$aProps['Owner'] = $iUserId;
 					}
-					if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
+					else
 					{
-						$oToDirectory->createDirectory($sNewName);
-						$oChildren = $oItem->getChildren();
-						foreach ($oChildren as $oChild)
+						$sChildPath = substr(dirname($oItem->getPath()), strlen($sFromRootPath));
+						$sID = $this->generateHashId($iUserId, $sFromType, $sChildPath, $oItem->getName());
+
+						$sNewChildPath = substr(dirname($oItemNew->getPath()), strlen($sToRootPath));
+
+						$mMin = $oApiMinManager->getMinByID($sID);
+						if (!empty($mMin['__hash__']))
 						{
-							$sChildNewName = $this->getNonExistentFileName(
-									$iUserId, 
-									$sToType, 
-									$sToPath . '/' . $sNewName, 
-									$oChild->getName()
-							);
-							$this->copy(
-								$iUserId, 
-								$sFromType, 
-								$sToType, 
-								$sFromPath . '/' . $sName, 
-								$sToPath . '/' . $sNewName, 
-								$oChild->getName(), 
-								$sChildNewName, 
-								$bMove
-							);
-						}
+							$sNewID = $this->generateHashId($iUserId, $sToType, $sNewChildPath, $oItemNew->getName());
+
+							$mMin['Path'] = $sNewChildPath;
+							$mMin['Type'] = $sToType;
+							$mMin['Name'] = $oItemNew->getName();
+
+							$oApiMinManager->updateMinByID($sID, $mMin, $sNewID);
+						}					
 					}
-					if ($bMove)
-					{
-						$oItem->delete();
-					}
-					return true;
+					$oItemNew->updateProperties($aProps);
 				}
+				if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
+				{
+					$oToDirectory->createDirectory($sNewName);
+					$oChildren = $oItem->getChildren();
+					foreach ($oChildren as $oChild)
+					{
+						$sChildNewName = $this->getNonExistentFileName(
+								$iUserId, 
+								$sToType, 
+								$sToPath . '/' . $sNewName, 
+								$oChild->getName()
+						);
+						$this->copy(
+							$iUserId, 
+							$sFromType, 
+							$sToType, 
+							$sFromPath . '/' . $sName, 
+							$sToPath . '/' . $sNewName, 
+							$oChild->getName(), 
+							$sChildNewName, 
+							$bMove
+						);
+					}
+				}
+				if ($bMove)
+				{
+					$oItem->delete();
+				}
+				return true;
 			}
 		}
 		return false;

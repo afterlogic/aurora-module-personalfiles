@@ -316,6 +316,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$sUUID = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
 			$aFiles = $this->oApiFilesManager->getFiles($sUUID, $aArgs['Type'], $aArgs['Path'], $aArgs['Pattern']);
+			
+			var_dump($aFiles);
 
 			$mResult = array(
 				'Items' => $aFiles,
