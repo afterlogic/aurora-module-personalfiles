@@ -274,11 +274,6 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				$aArgs = array(
 					'UserId' => $iUserId
 				);
-				$this->oManager->GetModule()->broadcastEvent(
-					'PopulateFileItem', 
-					$aArgs,
-					$oResult
-				);
 
 				$oResult->LastModified = $oItem->getLastModified();
 				if (!$oResult->ContentType)

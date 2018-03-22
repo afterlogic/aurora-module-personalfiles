@@ -59,7 +59,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Files::CreatePublicLink::after', array($this, 'onAfterCreatePublicLink'));
 		$this->subscribeEvent('Files::GetFileContent::after', array($this, 'onAfterGetFileContent'));
 		$this->subscribeEvent('Files::IsFileExists::after', array($this, 'onAfterIsFileExists'));
-		$this->subscribeEvent('PopulateFileItem', array($this, 'onPopulateFileItem'));
+		$this->subscribeEvent('Files::PopulateFileItem::after', array($this, 'onAfterPopulateFileItem'));
 		$this->subscribeEvent('Core::AfterDeleteUser', array($this, 'onAfterDeleteUser'));
 		$this->subscribeEvent('Files::CheckFilesQuota', array($this, 'onCheckFilesQuota'));
 		$this->subscribeEvent('Files::DeletePublicLink::after', array($this, 'onAfterDeletePublicLink'));
@@ -227,7 +227,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param \Aurora\Modules\Files\Classes\FileItem $oItem
 	 * @return bool
 	 */
-	public function onPopulateFileItem($aArgs, &$oItem)
+	public function onAfterPopulateFileItem($aArgs, &$oItem)
 	{
 		if ($oItem->IsLink)
 		{
@@ -315,13 +315,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$sUUID = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
-			$aFiles = $this->oApiFilesManager->getFiles($sUUID, $aArgs['Type'], $aArgs['Path'], $aArgs['Pattern']);
-
-			$mResult = array(
-				'Items' => $aFiles,
-				'Quota' => \Aurora\System\Api::GetModuleDecorator('Files')->GetQuota($aArgs['UserId'])
-			);
-			return true;
+			$mResult = $this->oApiFilesManager->getFiles($sUUID, $aArgs['Type'], $aArgs['Path'], $aArgs['Pattern']);
 		}
 	}
 	
