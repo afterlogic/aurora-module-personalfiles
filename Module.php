@@ -347,6 +347,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$sUUID = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
 			$mResult = $this->oApiFilesManager->getFileInfo($sUUID, $aArgs['Type'], $aArgs['Path'], $aArgs['Id']);
+			
 			return true;
 		}
 	}
