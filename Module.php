@@ -336,12 +336,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function onAfterGetFileContent($aArgs, &$mResult) 
 	{
-		$UserId = $aArgs['UserId'];
+		$sUUID = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
 		$Type = $aArgs['Type'];
 		$Path = $aArgs['Path'];
 		$Name = $aArgs['Name'];
-
-		$mFile = $this->oApiFilesManager->getFile($UserId, $Type, $Path, $Name);
+		
+		$mFile = $this->oApiFilesManager->getFile($sUUID, $Type, $Path, $Name);
 		if (is_resource($mFile))
 		{
 			$mResult = stream_get_contents($mFile);
