@@ -60,7 +60,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Files::GetFileContent::after', array($this, 'onAfterGetFileContent'));
 		$this->subscribeEvent('Files::IsFileExists::after', array($this, 'onAfterIsFileExists'));
 		$this->subscribeEvent('Files::PopulateFileItem::after', array($this, 'onAfterPopulateFileItem'));
-		$this->subscribeEvent('Core::AfterDeleteUser', array($this, 'onAfterDeleteUser'));
+		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
 		$this->subscribeEvent('Files::CheckFilesQuota', array($this, 'onCheckFilesQuota'));
 		$this->subscribeEvent('Files::DeletePublicLink::after', array($this, 'onAfterDeletePublicLink'));
 	}
@@ -130,10 +130,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		if ($this->checkStorageType($aArgs['Type']))
 		{
-			$sUUID = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
+			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
 			$iOffset = isset($aArgs['Offset']) ? $aArgs['Offset'] : 0;
 			$iChunkSizet = isset($aArgs['ChunkSize']) ? $aArgs['ChunkSize'] : 0;
-			$Result = $this->oApiFilesManager->getFile($sUUID, $aArgs['Type'], $aArgs['Path'], $aArgs['Id'], $iOffset, $iChunkSizet);
+			$Result = $this->oApiFilesManager->getFile($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Id'], $iOffset, $iChunkSizet);
 			
 			return true;
 		}
@@ -243,11 +243,18 @@ class Module extends \Aurora\System\Module\AbstractModule
 	
 	/**
 	 * @ignore
-	 * @param int $iUserId
+	 * @param int $mResult
 	 */
-	public function onAfterDeleteUser($aArgs)
+	public function onBeforeDeleteUser($aArgs, &$mResult)
 	{
-		$this->oApiFilesManager->ClearFiles($aArgs['UUID']);
+		if (isset($aArgs['UserId']))
+		{
+			$oUser = \Aurora\System\Api::getUserById($aArgs['UserId']);
+			if ($oUser)
+			{
+				$this->oApiFilesManager->ClearFiles($oUser->PublicId);
+			}
+		}
 	}
 	/***** private functions *****/
 
@@ -314,8 +321,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		if ($this->checkStorageType($aArgs['Type']))
 		{
-			$sUUID = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
-			$mResult = $this->oApiFilesManager->getFiles($sUUID, $aArgs['Type'], $aArgs['Path'], $aArgs['Pattern']);
+			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
+			$mResult = $this->oApiFilesManager->getFiles($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Pattern']);
 		}
 	}
 	
@@ -345,8 +352,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		if ($this->checkStorageType($aArgs['Type']))
 		{
-			$sUUID = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
-			$mResult = $this->oApiFilesManager->getFileInfo($sUUID, $aArgs['Type'], $aArgs['Path'], $aArgs['Id']);
+			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
+			$mResult = $this->oApiFilesManager->getFileInfo($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Id']);
 			
 			return true;
 		}
@@ -425,7 +432,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$iUserId = $mMin['UserId'];
 				if ($iUserId)
 				{
-					$sUUID = \Aurora\System\Api::getUserPublicIdById($iUserId);
+					$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($iUserId);
 					$aItems = array();
 					$sMinPath = implode('/', array($mMin['Path'], $mMin['Name']));
 					$Path = $aArgs['Path'];
@@ -439,7 +446,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 						$Path = str_replace('.', '', $Path);
 						try
 						{
-							$aItems = $this->oApiFilesManager->getFiles($sUUID, $mMin['Type'], $Path, '', $aArgs['Hash']);
+							$aItems = $this->oApiFilesManager->getFiles($sUserPiblicId, $mMin['Type'], $Path, '', $aArgs['Hash']);
 						}
 						catch (\Exception $oEx)
 						{
@@ -506,10 +513,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	
 	public function onAfterCreateFolder(&$aArgs, &$mResult)
 	{
-		$sUUID = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
+		$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
 		if ($this->checkStorageType($aArgs['Type']))
 		{
-			$mResult = $this->oApiFilesManager->createFolder($sUUID, $aArgs['Type'], $aArgs['Path'], $aArgs['FolderName']);
+			$mResult = $this->oApiFilesManager->createFolder($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['FolderName']);
 			return true;
 		}
 	}
@@ -598,11 +605,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$Link = substr($Link, 11);
 			}
 
-			$sUUID = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
 			if ($this->checkStorageType($Type))
 			{
 				$Name = \trim(\MailSo\Base\Utils::ClearFileName($Name));
-				$mResult = $this->oApiFilesManager->createLink($sUUID, $Type, $Path, $Link, $Name);
+				$mResult = $this->oApiFilesManager->createLink($sUserPiblicId, $Type, $Path, $Link, $Name);
 			}
 		}
 	}
@@ -659,7 +666,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	
 	public function onAfterDelete(&$aArgs, &$mResult)
 	{
-		$sUUID = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
+		$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$mResult = false;
@@ -668,7 +675,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			{
 				if (!empty($oItem['Name']))
 				{
-					$mResult = $this->oApiFilesManager->delete($sUUID, $aArgs['Type'], $oItem['Path'], $oItem['Name']);
+					$mResult = $this->oApiFilesManager->delete($sUserPiblicId, $aArgs['Type'], $oItem['Path'], $oItem['Name']);
 					if (!$mResult)
 					{
 						break;
@@ -736,11 +743,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		if ($this->checkStorageType($aArgs['Type']))
 		{
-			$sUUID = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
+			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
 			$sNewName = \trim(\MailSo\Base\Utils::ClearFileName($aArgs['NewName']));
 
-			$sNewName = $this->oApiFilesManager->getNonExistentFileName($sUUID, $aArgs['Type'], $aArgs['Path'], $sNewName);
-			$mResult = $this->oApiFilesManager->rename($sUUID, $aArgs['Type'], $aArgs['Path'], $aArgs['Name'], $sNewName, $aArgs['IsLink']);
+			$sNewName = $this->oApiFilesManager->getNonExistentFileName($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $sNewName);
+			$mResult = $this->oApiFilesManager->rename($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Name'], $sNewName, $aArgs['IsLink']);
 			
 			return true;
 		}
@@ -802,7 +809,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	
 	public function onAfterCopy(&$aArgs, &$mResult)
 	{
-		$sUUID = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
+		$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
 
 		if ($this->checkStorageType($aArgs['FromType']))
 		{
@@ -812,14 +819,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 				if (!$bFolderIntoItself)
 				{
 					$mResult = $this->oApiFilesManager->copy(
-						$sUUID, 
+						$sUserPiblicId, 
 						$aItem['FromType'], 
 						$aArgs['ToType'], 
 						$aItem['FromPath'], 
 						$aArgs['ToPath'], 
 						$aItem['Name'], 
 						$this->oApiFilesManager->getNonExistentFileName(
-							$sUUID, 
+							$sUserPiblicId, 
 							$aArgs['ToType'], 
 							$aArgs['ToPath'], 
 							$aItem['Name']
@@ -889,21 +896,21 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		if ($this->checkStorageType($aArgs['FromType']))
 		{
-			$sUUID = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
+			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
 			foreach ($aArgs['Files'] as $aItem)
 			{
 				$bFolderIntoItself = $aItem['IsFolder'] && $aArgs['ToPath'] === $aItem['FromPath'].'/'.$aItem['Name'];
 				if (!$bFolderIntoItself)
 				{
 					$mResult = $this->oApiFilesManager->move(
-						$sUUID, 
+						$sUserPiblicId, 
 						$aItem['FromType'], 
 						$aArgs['ToType'], 
 						$aItem['FromPath'], 
 						$aArgs['ToPath'], 
 						$aItem['Name'], 
 						$this->oApiFilesManager->getNonExistentFileName(
-							$sUUID, 
+							$sUserPiblicId, 
 							$aArgs['ToType'], 
 							$aArgs['ToPath'], 
 							$aItem['Name']
@@ -922,9 +929,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		if ($this->checkStorageType($aArgs['Type']))
 		{
-			$sUUID = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
+			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
 			$mResult = array(
-				'Used' => $this->oApiFilesManager->getUserSpaceUsed($sUUID, [\Aurora\System\Enums\FileStorageType::Personal]),
+				'Used' => $this->oApiFilesManager->getUserSpaceUsed($sUserPiblicId, [\Aurora\System\Enums\FileStorageType::Personal]),
 				'Limit' => $this->getConfig('UserSpaceLimitMb', 0) * 1024 * 1024
 			);
 		}
@@ -1006,9 +1013,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$IsFolder = $aArgs['IsFolder'];
 
 			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-			$sUUID = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
 			$bFolder = (bool)$IsFolder;
-			$mResult = $this->oApiFilesManager->createPublicLink($sUUID, $Type, $Path, $Name, $Size, $bFolder);
+			$mResult = $this->oApiFilesManager->createPublicLink($sUserPiblicId, $Type, $Path, $Name, $Size, $bFolder);
 		}
 	}	
 	
@@ -1083,9 +1090,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-			$sUUID = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
 
-			$mResult = $this->oApiFilesManager->deletePublicLink($sUUID, $Type, $Path, $Name);
+			$mResult = $this->oApiFilesManager->deletePublicLink($sUserPiblicId, $Type, $Path, $Name);
 		}
 	}
 	
@@ -1098,8 +1105,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$Path = $aArgs['Path'];
 			$Name = $aArgs['Name'];
 
-			$sUUID = \Aurora\System\Api::getUserPublicIdById($UserId);
-			$mResult = $this->oApiFilesManager->isFileExists($sUUID, $Type, $Path, $Name);
+			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$mResult = $this->oApiFilesManager->isFileExists($sUserPiblicId, $Type, $Path, $Name);
 		}
 	}
 	
@@ -1108,11 +1115,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$Type = $aArgs['Type'];
 		if ($this->checkStorageType($Type))
 		{
-			$sUUID = $aArgs['UserUUID'];
+			$sUserPublicId = $aArgs['PublicId'];
 			$iSize = $aArgs['Size'];
 			if ($Type === \Aurora\System\Enums\FileStorageType::Personal)
 			{
-				$aQuota = \Aurora\System\Api::GetModuleDecorator('Files')->GetQuota($sUUID, $Type);
+				$aQuota = \Aurora\System\Api::GetModuleDecorator('Files')->GetQuota($sUserPublicId, $Type);
 				if ($aQuota['Limit'] > 0 && $aQuota['Used'] + $iSize > $aQuota['Limit'])
 				{
 					$mResult = false;

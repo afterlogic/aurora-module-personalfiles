@@ -404,32 +404,13 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 	{
 		return $this->oStorage->getNonExistentFileName($iUserId, $iType, $sPath, $sFileName);
 	}	
-	
-	/**
-	 * 
-	 * @param int $iUserId
-	 */
-	public function ClearPrivateFiles($iUserId)
-	{
-		$this->oStorage->clearPrivateFiles($iUserId);
-	}
 
 	/**
 	 * 
-	 * @param int $iUserId
+	 * @param string $sPublicId
 	 */
-	public function ClearCorporateFiles($iUserId)
+	public function ClearFiles($sPublicId)
 	{
-		$this->oStorage->clearPrivateFiles($iUserId);
-	}
-
-	/**
-	 * 
-	 * @param int $iUserId
-	 */
-	public function ClearFiles($iUserId)
-	{
-		$this->ClearPrivateFiles($iUserId);
-		$this->ClearCorporateFiles($iUserId);
+		$this->oStorage->clearPrivateFiles($sPublicId);
 	}
 }
