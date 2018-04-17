@@ -4,20 +4,20 @@
  * if commercial version of the product was purchased.
  * For full statements of the licenses see LICENSE-AFTERLOGIC and LICENSE-AGPL3 files.
  * 
+ */
+
+namespace Aurora\Modules\PersonalFiles\Storages\Sabredav;
+
+/**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing AfterLogic Software License
  * @copyright Copyright (c) 2018, Afterlogic Corp.
- */
-
-/**
+ *
  * @internal
  * 
  * @package Filestorage
  * @subpackage Storages
  */
-
-namespace Aurora\Modules\PersonalFiles\Storages\Sabredav;
-
 class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 {
 	/**
