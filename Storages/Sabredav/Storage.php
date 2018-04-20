@@ -64,8 +64,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$sRootPath = null;
 		if ($iUserId)
 		{
-			$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
-			$oUser = $oCoreDecorator->GetUserByPublicId($iUserId);
+			$oCore = \Aurora\System\Api::GetModule('Core');
+			$oUser = $oCore->GetUserByPublicId($iUserId);
 			if ($oUser)
 			{
 				$sUser = $bUser ? '/' . $oUser->UUID : '';
@@ -75,9 +75,9 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 			if ($sType === \Aurora\System\Enums\FileStorageType::Corporate)
 			{
-				$iTenantId = /*$oAccount ? $oAccount->IdTenant :*/ 0;
+				$iTenantId = $oUser ? $oUser->IdTenant : 0;
 
-				$sTenant = $bUser ? $sTenant = '/' . $iTenantId : '';
+				$sTenant = $bUser ? '/' . $iTenantId : '';
 				$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
 					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE . $sTenant;
 			}
@@ -413,14 +413,6 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$oDirectory = null;
 		$aItems = array();
 		$aResult = array();
-		
-		$oTenant = null;
-		$oApiTenants = false; //\Aurora\System\Api::GetCoreManager('tenants');
-		if ($oApiTenants)
-		{
-			$oTenant = /*(0 < $oAccount->IdTenant) ? $oApiTenants->getTenantById($oAccount->IdTenant) :*/
-				$oApiTenants->getDefaultGlobalTenant();
-		}
 
 		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
 		if ($oDirectory !== null && $oDirectory instanceof \Afterlogic\DAV\FS\Directory)

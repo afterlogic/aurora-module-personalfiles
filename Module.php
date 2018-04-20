@@ -62,7 +62,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Files::IsFileExists::after', array($this, 'onAfterIsFileExists'));
 		$this->subscribeEvent('Files::PopulateFileItem::after', array($this, 'onAfterPopulateFileItem'));
 		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
-		$this->subscribeEvent('Files::CheckFilesQuota', array($this, 'onCheckFilesQuota'));
+		$this->subscribeEvent('Files::CheckQuota::after', array($this, 'onAfterCheckQuota'));
 		$this->subscribeEvent('Files::DeletePublicLink::after', array($this, 'onAfterDeletePublicLink'));
 	}
 	
@@ -935,6 +935,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 				'Used' => $this->oApiFilesManager->getUserSpaceUsed($sUserPiblicId, [\Aurora\System\Enums\FileStorageType::Personal]),
 				'Limit' => $this->getConfig('UserSpaceLimitMb', 0) * 1024 * 1024
 			);
+			
+			return true;
 		}
 	}
 	
@@ -1111,22 +1113,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 	}
 	
-	public function onCheckFilesQuota($aArgs, &$mResult)
+	public function onAfterCheckQuota($aArgs, &$mResult)
 	{
 		$Type = $aArgs['Type'];
 		if ($this->checkStorageType($Type))
 		{
-			$sUserPublicId = $aArgs['PublicId'];
+			$sUserPublicId = $aArgs['PublicUserId'];
 			$iSize = $aArgs['Size'];
-			if ($Type === \Aurora\System\Enums\FileStorageType::Personal)
-			{
-				$aQuota = \Aurora\System\Api::GetModuleDecorator('Files')->GetQuota($sUserPublicId, $Type);
-				if ($aQuota['Limit'] > 0 && $aQuota['Used'] + $iSize > $aQuota['Limit'])
-				{
-					$mResult = false;
-					return true;
-				}
-			}
+			$aQuota = \Aurora\System\Api::GetModuleDecorator('Files')->GetQuota($sUserPublicId, $Type);
+			$mResult = !($aQuota['Limit'] > 0 && $aQuota['Used'] + $iSize > $aQuota['Limit']);
+			return true;
 		}
 	}
 }

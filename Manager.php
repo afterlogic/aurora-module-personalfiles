@@ -110,6 +110,19 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 	{
 		return $this->oStorage->getDirectoryInfo($iUserId, $iType, $sPath);
 	}
+	
+	/**
+	 * Retrieves object on the specific directory. 
+	 * 
+	 * @param int $iUserId Account object 
+	 * @param int $iType Storage type. Accepted values: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**. 
+	 * 
+	 * @return \Aurora\Modules\Files\Classes\FileItem
+	 */
+	public function getDirectory($iUserId, $iType)
+	{
+		return $this->oStorage->getDirectory($iUserId, $iType);
+	}	
 
 	/**
 	 * Allows for reading contents of the file. 
