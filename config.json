@@ -3,14 +3,6 @@
 		false,
 		"bool"
 	],
-    "EnableUploadSizeLimit": [
-        true,
-        "bool"
-    ],
-    "UploadSizeLimitMb": [
-        100,
-        "int"
-    ],
     "UserSpaceLimitMb": [
         100,
         "int"
