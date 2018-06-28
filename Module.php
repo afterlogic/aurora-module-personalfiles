@@ -156,7 +156,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$iChunkSizet = isset($aArgs['ChunkSize']) ? $aArgs['ChunkSize'] : 0;
 			$mResult = $this->oApiFilesManager->getFile($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Id'], $iOffset, $iChunkSizet);
 			
-			return true;
+			return false;
 		}
 	}	
 	
@@ -182,7 +182,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				isset($aArgs['ExtendedProps']) ? $aArgs['ExtendedProps'] : null
 			);
 			
-			return true;
+			return false;
 		}
 	}
 	
@@ -252,7 +252,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			if ($sFileExtension === 'htm' || $sFileExtension === 'html')
 			{
 //				$oItem->Name = $this->getHtmlTitle($oItem->LinkUrl);
-				return true;
+				return false;
 			}
 		}
 	}	
@@ -335,7 +335,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
 			$mResult = $this->oApiFilesManager->getFileInfo($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Id']);
 			
-			return true;
+			return false;
 		}
 	}
 
@@ -399,7 +399,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$mResult = $this->oApiFilesManager->createFolder($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['FolderName']);
-			return true;
+			return false;
 		}
 	}
 
@@ -457,7 +457,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					}
 				}
 			}
-			return true;
+			return false;
 		}
 	}
 
@@ -476,7 +476,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$sNewName = $this->oApiFilesManager->getNonExistentFileName($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $sNewName);
 			$mResult = $this->oApiFilesManager->rename($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Name'], $sNewName, $aArgs['IsLink']);
 			
-			return true;
+			return false;
 		}
 	}
 
@@ -512,7 +512,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					);
 				}
 			}
-			return true;
+			return false;
 		}
 	}
 
@@ -548,7 +548,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				}
 			}
 			
-			return true;
+			return false;
 		}
 	}
 	
@@ -569,7 +569,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				'Limit' => $this->getConfig('UserSpaceLimitMb', 0) * 1024 * 1024
 			);
 			
-			return true;
+			return false;
 		}
 	}
 	
@@ -653,7 +653,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$iSize = $aArgs['Size'];
 			$aQuota = \Aurora\System\Api::GetModuleDecorator('Files')->GetQuota($sUserPublicId, $Type);
 			$mResult = !($aQuota['Limit'] > 0 && $aQuota['Used'] + $iSize > $aQuota['Limit']);
-			return true;
+			return false;
 		}
 	}
 }
