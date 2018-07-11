@@ -359,7 +359,18 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$iUserId = $mMin['UserId'];
 				if ($iUserId)
 				{
-					$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($iUserId);
+					$sUserPublicId = $iUserId;
+					
+					$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sUserPublicId);
+					if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+					{
+						$iUserId = $oUser->EntityId;
+						if ($iUserId > 0) 
+						{
+							\Aurora\System\Api::setUserId($iUserId);
+						}
+					}
+					
 					$aItems = array();
 					$sMinPath = implode('/', array($mMin['Path'], $mMin['Name']));
 					$Path = $aArgs['Path'];
@@ -373,7 +384,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 						$Path = str_replace('.', '', $Path);
 						try
 						{
-							$aItems = $this->oApiFilesManager->getFiles($sUserPiblicId, $mMin['Type'], $Path, '', $aArgs['Hash']);
+							$aItems = $this->oApiFilesManager->getFiles($sUserPublicId, $mMin['Type'], $Path, '', $aArgs['Hash']);
 						}
 						catch (\Exception $oEx)
 						{
