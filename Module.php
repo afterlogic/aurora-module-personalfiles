@@ -348,29 +348,15 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::Anonymous);
 		
-		$iUserId = null;
-
 		$oMinDecorator =  $this->getMinModuleDecorator();
 		if ($oMinDecorator)
 		{
 			$mMin = $oMinDecorator->GetMinByHash($aArgs['Hash']);
 			if (!empty($mMin['__hash__']))
 			{
-				$iUserId = $mMin['UserId'];
-				if ($iUserId)
+				$sUserPublicId = $mMin['UserId'];
+				if ($sUserPublicId)
 				{
-					$sUserPublicId = $iUserId;
-					
-					$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sUserPublicId);
-					if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
-					{
-						$iUserId = $oUser->EntityId;
-						if ($iUserId > 0) 
-						{
-							\Aurora\System\Api::setUserId($iUserId);
-						}
-					}
-					
 					$aItems = array();
 					$sMinPath = implode('/', array($mMin['Path'], $mMin['Name']));
 					$Path = $aArgs['Path'];

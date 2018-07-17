@@ -53,19 +53,19 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	}
 
 	/**
-	 * @param int $iUserId
+	 * @param string $sUserPublicId
 	 * @param string $sType
 	 * @param bool $bUser
 	 *
 	 * @return string|null
 	 */
-	protected function getRootPath($iUserId, $sType, $bUser = false)
+	protected function getRootPath($sUserPublicId, $sType, $bUser = false)
 	{
 		$sRootPath = null;
-		if ($iUserId)
+		if ($sUserPublicId)
 		{
 			$oCore = \Aurora\System\Api::GetModule('Core');
-			$oUser = $oCore->GetUserByPublicId($iUserId);
+			$oUser = $oCore->GetUserByPublicId($sUserPublicId);
 			if ($oUser)
 			{
 				$sUser = $bUser ? '/' . $oUser->UUID : '';
@@ -92,23 +92,23 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	}
 
 	/**
-	 * @param int $iUserId
+	 * @param int $sUserPublicId
 	 * @param string $sType
 	 * @param string $sPath
 	 *
 	 * @return Afterlogic\DAV\FS\Directory|null
 	 */
-	public function getDirectory($iUserId, $sType, $sPath = '')
+	public function getDirectory($sUserPublicId, $sType, $sPath = '')
 	{
 		$oDirectory = null;
 		
-		if ($iUserId)
+		if ($sUserPublicId)
 		{
-			$sRootPath = $this->getRootPath($iUserId, $sType);
+			$sRootPath = $this->getRootPath($sUserPublicId, $sType);
 			
 			if ($sType === \Aurora\System\Enums\FileStorageType::Personal) 
 			{
-				$oDirectory = new \Afterlogic\DAV\FS\RootPersonal($sRootPath);
+				$oDirectory = new \Afterlogic\DAV\FS\RootPersonal($sRootPath, $sUserPublicId);
 			} 
 			else if ($sType === \Aurora\System\Enums\FileStorageType::Corporate) 
 			{
