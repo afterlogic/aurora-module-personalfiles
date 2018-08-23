@@ -565,8 +565,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 				'Used' => $this->oApiFilesManager->getUserSpaceUsed($sUserPiblicId, [\Aurora\System\Enums\FileStorageType::Personal]),
 				'Limit' => $this->getConfig('UserSpaceLimitMb', 0) * 1024 * 1024
 			);
-			
-			return true;
 		}
 	}
 	
