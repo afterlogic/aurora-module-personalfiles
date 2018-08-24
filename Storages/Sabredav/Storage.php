@@ -612,6 +612,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
 		if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
 		{
+			$sName = '';
 			$oItem = $oDirectory->getChild($sName);
 			if ($oItem !== null)
 			{
