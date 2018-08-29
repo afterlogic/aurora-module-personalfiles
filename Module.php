@@ -54,7 +54,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Files::Rename::after', array($this, 'onAfterRename'));
 		$this->subscribeEvent('Files::Delete::after', array($this, 'onAfterDelete'));
 		$this->subscribeEvent('Files::GetQuota::after', array($this, 'onAfterGetQuota'));
-		$this->subscribeEvent('Files::GetPublicFiles::after', array($this, 'onAfterGetPublicFiles'));
 		$this->subscribeEvent('Files::CreateLink::after', array($this, 'onAfterCreateLink'));
 		$this->subscribeEvent('Files::CreatePublicLink::after', array($this, 'onAfterCreatePublicLink'));
 		$this->subscribeEvent('Files::GetFileContent::after', array($this, 'onAfterGetFileContent'));
@@ -63,6 +62,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
 		$this->subscribeEvent('Files::CheckQuota::after', array($this, 'onAfterCheckQuota'));
 		$this->subscribeEvent('Files::DeletePublicLink::after', array($this, 'onAfterDeletePublicLink'));
+		
+		$this->extendObject(
+			'Aurora\Modules\Core\Classes\User', 
+			array (
+				'UsedSpace' => array('bigint', 0),
+			)
+		);		
 	}
 	
 	/**
@@ -91,6 +97,22 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		$this->setConfig('UserSpaceLimitMb', $UserSpaceLimitMb);
 		return (bool) $this->saveModuleConfig();
+	}
+	
+	public function UpdateUsedSpace()
+	{
+		$iResult = 0;
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		
+		if ($oUser)
+		{
+			$iResult = $this->oApiFilesManager->getUserSpaceUsed($oUser->PublicId, [\Aurora\System\Enums\FileStorageType::Personal]);
+			$oUser->{$this->GetName() . '::UsedSpace'} = $iResult; 
+			\Aurora\System\Managers\Eav::getInstance()->updateEntity($oUser);
+		}
+		
+		return $iResult;
 	}
 	
 	/**
@@ -181,7 +203,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 				isset($aArgs['Offset']) ? $aArgs['Offset'] : null,
 				isset($aArgs['ExtendedProps']) ? $aArgs['ExtendedProps'] : null
 			);
-			
+
+			$this->Decorator()->UpdateUsedSpace();
 			return true;
 		}
 	}
@@ -270,6 +293,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			if ($oUser)
 			{
 				$this->oApiFilesManager->ClearFiles($oUser->PublicId);
+				$this->Decorator()->UpdateUsedSpace();
 			}
 		}
 	}
@@ -300,7 +324,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
-			$mResult = $this->oApiFilesManager->getFiles($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Pattern']);
+			$sHash = isset($aArgs['PublicHash']) ? $aArgs['PublicHash'] : null;
+			$mResult = $this->oApiFilesManager->getFiles($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Pattern'], $sHash);
 		}
 	}
 	
@@ -344,52 +369,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $aArgs Arguments of event.
 	 * @param mixed $mResult Is passed by reference.
 	 */
-	public function onAfterGetPublicFiles($aArgs, &$mResult)
-	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::Anonymous);
-		
-		$oMinDecorator =  $this->getMinModuleDecorator();
-		if ($oMinDecorator)
-		{
-			$mMin = $oMinDecorator->GetMinByHash($aArgs['Hash']);
-			if (!empty($mMin['__hash__']))
-			{
-				$sUserPublicId = $mMin['UserId'];
-				if ($sUserPublicId)
-				{
-					$aItems = array();
-					$sMinPath = implode('/', array($mMin['Path'], $mMin['Name']));
-					$Path = $aArgs['Path'];
-					$mPos = strpos($Path, $sMinPath);
-					if ($mPos === 0 || $Path === '')
-					{
-						if ($mPos !== 0)
-						{
-							$Path =  $sMinPath . $Path;
-						}
-						$Path = str_replace('.', '', $Path);
-						try
-						{
-							$aItems = $this->oApiFilesManager->getFiles($sUserPublicId, $mMin['Type'], $Path, '', $aArgs['Hash']);
-						}
-						catch (\Exception $oEx)
-						{
-							$aItems = array();
-						}
-					}
-					$mResult['Items'] = $aItems;
-
-//					$oResult['Quota'] = $this->GetQuota($iUserId);
-				}
-			}
-		}
-	}	
-
-	/**
-	 * @ignore
-	 * @param array $aArgs Arguments of event.
-	 * @param mixed $mResult Is passed by reference.
-	 */
 	public function onAfterCreateFolder(&$aArgs, &$mResult)
 	{
 		$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
@@ -427,6 +406,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			{
 				$Name = \trim(\MailSo\Base\Utils::ClearFileName($Name));
 				$mResult = $this->oApiFilesManager->createLink($sUserPiblicId, $Type, $Path, $Link, $Name);
+				$this->Decorator()->UpdateUsedSpace();
 			}
 		}
 	}
@@ -454,6 +434,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 					}
 				}
 			}
+
+			$this->Decorator()->UpdateUsedSpace();
 			return true;
 		}
 	}
@@ -509,6 +491,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					);
 				}
 			}
+			$this->Decorator()->UpdateUsedSpace();
 			return true;
 		}
 	}
@@ -544,7 +527,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 					);
 				}
 			}
-			
+
+			$this->Decorator()->UpdateUsedSpace();
 			return true;
 		}
 	}
@@ -560,9 +544,17 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		if ($this->checkStorageType($aArgs['Type']))
 		{
-			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
+			$iSize = 0;
+
+			$oUser = \Aurora\System\Api::GetModule('Core')->GetUser((int)$aArgs['UserId']);
+
+			if ($oUser)
+			{
+				$iSize = $oUser->{$this->GetName() . '::UsedSpace'};
+			}
+			
 			$mResult = array(
-				'Used' => $this->oApiFilesManager->getUserSpaceUsed($sUserPiblicId, [\Aurora\System\Enums\FileStorageType::Personal]),
+				'Used' => $iSize,
 				'Limit' => $this->getConfig('UserSpaceLimitMb', 0) * 1024 * 1024
 			);
 		}
@@ -589,6 +581,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
 			$bFolder = (bool)$IsFolder;
 			$mResult = $this->oApiFilesManager->createPublicLink($sUserPiblicId, $Type, $Path, $Name, $Size, $bFolder);
+			$this->Decorator()->UpdateUsedSpace();
 		}
 	}	
 	
@@ -612,6 +605,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
 
 			$mResult = $this->oApiFilesManager->deletePublicLink($sUserPiblicId, $Type, $Path, $Name);
+			$this->Decorator()->UpdateUsedSpace();
 		}
 	}
 	

@@ -108,15 +108,15 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			
 			if ($sType === \Aurora\System\Enums\FileStorageType::Personal) 
 			{
-				$oDirectory = new \Afterlogic\DAV\FS\RootPersonal($sRootPath, $sUserPublicId);
+				$oDirectory = new \Afterlogic\DAV\FS\Personal\Root($sRootPath, $sUserPublicId);
 			} 
 			else if ($sType === \Aurora\System\Enums\FileStorageType::Corporate) 
 			{
-				$oDirectory = new \Afterlogic\DAV\FS\RootCorporate($sRootPath);
+				$oDirectory = new \Afterlogic\DAV\FS\Corporate\Root($sRootPath);
 			} 
 			else if ($sType === \Aurora\System\Enums\FileStorageType::Shared) 
 			{
-				$oDirectory = new \Afterlogic\DAV\FS\RootShared($sRootPath);
+				$oDirectory = new \Afterlogic\DAV\FS\Shared\Root($sRootPath);
 			}
 			
 			if ($oDirectory && !empty($sPath)) 
@@ -409,8 +409,6 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 */
 	public function getFiles($iUserId, $sType = \Aurora\System\Enums\FileStorageType::Personal, $sPath = '', $sPattern = '', $sPublicHash = null)
 	{
-		
-		$oDirectory = null;
 		$aItems = array();
 		$aResult = array();
 
