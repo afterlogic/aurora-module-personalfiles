@@ -293,7 +293,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 			if ($oUser)
 			{
 				$this->oApiFilesManager->ClearFiles($oUser->PublicId);
-				$this->Decorator()->UpdateUsedSpace();
 			}
 		}
 	}
