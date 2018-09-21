@@ -508,7 +508,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$bFolderIntoItself = $aItem['IsFolder'] && $aArgs['ToPath'] === $aItem['FromPath'].'/'.$aItem['Name'];
 				if (!$bFolderIntoItself)
 				{
-					$mResult = $this->oApiFilesManager->move(
+					$mResult = $this->oApiFilesManager->copy(
 						$sUserPiblicId, 
 						$aItem['FromType'], 
 						$aArgs['ToType'], 
@@ -519,8 +519,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 							$sUserPiblicId, 
 							$aArgs['ToType'], 
 							$aArgs['ToPath'], 
-							$aItem['Name']
-						)
+							$aItem['NewName']
+						),
+						true
 					);
 				}
 			}

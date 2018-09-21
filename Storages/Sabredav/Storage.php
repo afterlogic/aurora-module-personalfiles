@@ -608,10 +608,11 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	public function rename($iUserId, $sType, $sPath, $sName, $sNewName)
 	{
 		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
+			
 		if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
 		{
-			$sName = '';
 			$oItem = $oDirectory->getChild($sName);
+			
 			if ($oItem !== null)
 			{
 				if (strlen($sNewName) < 200)
