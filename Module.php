@@ -519,7 +519,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 							$sUserPiblicId, 
 							$aArgs['ToType'], 
 							$aArgs['ToPath'], 
-							$aItem['NewName']
+							$aItem['Name']
 						),
 						true
 					);
