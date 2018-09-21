@@ -47,7 +47,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$this->subscribeEvent('Files::GetStorages::after', array($this, 'onAfterGetStorages'));
 		$this->subscribeEvent('Files::GetFileInfo::after', array($this, 'onAfterGetFileInfo'), 10);
-		$this->subscribeEvent('Files::GetFiles::after', array($this, 'onAfterGetFiles'));
+		$this->subscribeEvent('Files::GetItems::after', array($this, 'onAfterGetItems'));
 		$this->subscribeEvent('Files::CreateFolder::after', array($this, 'onAfterCreateFolder'));
 		$this->subscribeEvent('Files::Copy::after', array($this, 'onAfterCopy'));
 		$this->subscribeEvent('Files::Move::after', array($this, 'onAfterMove'));
@@ -316,10 +316,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $aArgs Arguments of event.
 	 * @param mixed $mResult Is passed by reference.
 	 */
-	public function onAfterGetFiles($aArgs, &$mResult)
+	public function onAfterGetItems($aArgs, &$mResult)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
@@ -539,8 +537,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function onAfterGetQuota($aArgs, &$mResult)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$iSize = 0;
