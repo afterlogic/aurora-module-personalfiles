@@ -422,7 +422,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 			foreach ($aArgs['Items'] as $oItem)
 			{
-				if (!empty($oItem['Name']))
+				if (isset($oItem['Name']) && strlen(trim($oItem['Name'])) > 0)
 				{
 					$mResult = $this->oApiFilesManager->delete($sUserPiblicId, $aArgs['Type'], $oItem['Path'], $oItem['Name']);
 					if (!$mResult)
