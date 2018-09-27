@@ -385,9 +385,9 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 	 * 
 	 * @return bool
 	 */
-	public function copy($iUserId, $iFromType, $iToType, $sFromPath, $sToPath, $sName, $sNewName = null)
+	public function copy($iUserId, $iFromType, $iToType, $sFromPath, $sToPath, $sName, $sNewName = null, $bMove = false)
 	{
-		return $this->oStorage->copy($iUserId, $iFromType, $iToType, $sFromPath, $sToPath, $sName, $sNewName);
+		return $this->oStorage->copy($iUserId, $iFromType, $iToType, $sFromPath, $sToPath, $sName, $sNewName, $bMove);
 	}
 
 	/**
