@@ -176,7 +176,17 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
 			$iOffset = isset($aArgs['Offset']) ? $aArgs['Offset'] : 0;
 			$iChunkSizet = isset($aArgs['ChunkSize']) ? $aArgs['ChunkSize'] : 0;
-			$mResult = $this->oApiFilesManager->getFile($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Id'], $iOffset, $iChunkSizet);
+			
+			try
+			{
+				$mResult = $this->oApiFilesManager->getFile($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Id'], $iOffset, $iChunkSizet);
+			}
+			catch (\Sabre\DAV\Exception\NotFound $oEx)
+			{
+				$mResult = false;
+				header("HTTP/1.0 404 Not Found");
+				die('File not found');
+			}
 			
 			return true;
 		}
