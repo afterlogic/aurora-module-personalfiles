@@ -277,25 +277,25 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 	/**
 	 * 
 	 * @param int $iUserId
-	 * @param int $iType
+	 * @param int $sType
 	 * @param string $sPath
-	 * @param string $sNewName
-	 * @param int $iSize
+	 * @param string $sName
+	 * @param int $sSize
 	 * 
 	 * @return array
 	 */
-	private function generateMinArray($iUserId, $iType, $sPath, $sNewName, $iSize)
+	private function generateMinArray($iUserId, $sType, $sPath, $sName, $sSize, $bIsFolder = false)
 	{
 		$aData = null;
 		if ($iUserId)
 		{
 			$aData = array(
-				'AccountType' => 'wm',
-				'Account' => 0,
-				'Type' => $iType,
-				'Path' => $sPath,
-				'Name' => $sNewName,
-				'Size' => $iSize
+				'UserId' => $iUserId,
+				'Type' => $sType, 
+				'Path' => $sPath, 
+				'Name' => $sName,
+				'Size' => $sSize,
+				'IsFolder' => $bIsFolder
 			);
 		}
 
@@ -316,7 +316,7 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 	 */
 	public function rename($iUserId, $iType, $sPath, $sName, $sNewName, $bIsLink)
 	{
-		$bResult = /*$bIsLink ? $this->oStorage->renameLink($iUserId, $iType, $sPath, $sName, $sNewName) : */$this->oStorage->rename($iUserId, $iType, $sPath, $sName, $sNewName);
+		$bResult = $this->oStorage->rename($iUserId, $iType, $sPath, $sName, $sNewName);
 		if ($bResult)
 		{
 			$sID = $this->oStorage->generateHashId($iUserId, $iType, $sPath, $sName);

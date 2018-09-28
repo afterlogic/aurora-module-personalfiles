@@ -451,8 +451,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 			$sNewName = $this->oApiFilesManager->getNonExistentFileName($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $sNewName);
 			$mResult = $this->oApiFilesManager->rename($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Name'], $sNewName, $aArgs['IsLink']);
-			
-			return true;
 		}
 	}
 
