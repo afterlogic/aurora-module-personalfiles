@@ -436,6 +436,13 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			{
 				$aResult[] = $this->getFileInfo($iUserId, $sType, $oItem, $sPublicHash);
 			}
+			
+			usort($aResult, 
+				function ($a, $b) 
+					{ 
+						return ($a->Name > $b->Name); 
+					}
+			);			
 		}
 		
 		return $aResult;
