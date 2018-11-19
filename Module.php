@@ -63,11 +63,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Files::CheckQuota::after', array($this, 'onAfterCheckQuota'));
 		$this->subscribeEvent('Files::DeletePublicLink::after', array($this, 'onAfterDeletePublicLink'));
 		
-		$this->extendObject(
-			'Aurora\Modules\Core\Classes\User', 
-			array (
+		\Aurora\Modules\Core\Classes\User::extend(
+			self::GetName(),
+			[
 				'UsedSpace' => array('bigint', 0),
-			)
+			]
 		);		
 	}
 	
@@ -108,7 +108,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($oUser)
 		{
 			$iResult = $this->oApiFilesManager->getUserSpaceUsed($oUser->PublicId, [\Aurora\System\Enums\FileStorageType::Personal]);
-			$oUser->{$this->GetName() . '::UsedSpace'} = $iResult; 
+			$oUser->{self::GetName() . '::UsedSpace'} = $iResult; 
 			\Aurora\System\Managers\Eav::getInstance()->updateEntity($oUser);
 		}
 		
@@ -554,7 +554,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 			if ($oUser)
 			{
-				$iSize = $oUser->{$this->GetName() . '::UsedSpace'};
+				$iSize = $oUser->{self::GetName() . '::UsedSpace'};
 			}
 			
 			$mResult = array(
