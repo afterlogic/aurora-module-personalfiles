@@ -22,13 +22,23 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *
 	 * @var \CApiFilesManager
 	 */
-	public $oApiFilesManager = null;
+	public $oManager = null;
 
 	/**
 	 *
 	 * @var \CApiModuleDecorator
 	 */
 	protected $oMinModuleDecorator = null;
+
+	public function getManager()
+	{
+		if ($this->oManager === null)
+		{
+			$this->oManager = new Manager($this);
+		}
+
+		return $this->oManager;
+	}
 
 	/**
 	 * Initializes Files Module.
@@ -38,7 +48,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function init() 
 	{
 		ini_set( 'default_charset', 'UTF-8' ); //support for cyrillic characters in file names
-		$this->oApiFilesManager = new Manager($this);
 		
 		$this->subscribeEvent('Files::GetFile', array($this, 'onGetFile'));
 		$this->subscribeEvent('Files::CreateFile', array($this, 'onCreateFile'));
@@ -107,7 +116,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		if ($oUser)
 		{
-			$iResult = $this->oApiFilesManager->getUserSpaceUsed($oUser->PublicId, [\Aurora\System\Enums\FileStorageType::Personal]);
+			$iResult = $this->getManager()->getUserSpaceUsed($oUser->PublicId, [\Aurora\System\Enums\FileStorageType::Personal]);
 			$oUser->{self::GetName() . '::UsedSpace'} = $iResult; 
 			\Aurora\System\Managers\Eav::getInstance()->updateEntity($oUser);
 		}
@@ -179,7 +188,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			
 			try
 			{
-				$mResult = $this->oApiFilesManager->getFile($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Id'], $iOffset, $iChunkSizet);
+				$mResult = $this->getManager()->getFile($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Id'], $iOffset, $iChunkSizet);
 			}
 			catch (\Sabre\DAV\Exception\NotFound $oEx)
 			{
@@ -202,7 +211,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		if ($this->checkStorageType($aArgs['Type']))
 		{
-			$Result = $this->oApiFilesManager->createFile(
+			$Result = $this->getManager()->createFile(
 				\Aurora\System\Api::getUserPublicIdById(isset($aArgs['UserId']) ? $aArgs['UserId'] : null),
 				isset($aArgs['Type']) ? $aArgs['Type'] : null,
 				isset($aArgs['Path']) ? $aArgs['Path'] : null,
@@ -302,7 +311,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oUser = \Aurora\System\Api::getUserById($aArgs['UserId']);
 			if ($oUser)
 			{
-				$this->oApiFilesManager->ClearFiles($oUser->PublicId);
+				$this->getManager()->ClearFiles($oUser->PublicId);
 			}
 		}
 	}
@@ -332,7 +341,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
 			$sHash = isset($aArgs['PublicHash']) ? $aArgs['PublicHash'] : null;
-			$mResult = $this->oApiFilesManager->getFiles($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Pattern'], $sHash);
+			$mResult = $this->getManager()->getFiles($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Pattern'], $sHash);
 		}
 	}
 	
@@ -348,7 +357,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$Path = $aArgs['Path'];
 		$Name = $aArgs['Name'];
 		
-		$mFile = $this->oApiFilesManager->getFile($sUUID, $Type, $Path, $Name);
+		$mFile = $this->getManager()->getFile($sUUID, $Type, $Path, $Name);
 		if (is_resource($mFile))
 		{
 			$mResult = stream_get_contents($mFile);
@@ -365,7 +374,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
-			$mResult = $this->oApiFilesManager->getFileInfo($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Id']);
+			$mResult = $this->getManager()->getFileInfo($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Id']);
 			
 			return true;
 		}
@@ -381,7 +390,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
 		if ($this->checkStorageType($aArgs['Type']))
 		{
-			$mResult = $this->oApiFilesManager->createFolder($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['FolderName']);
+			$mResult = $this->getManager()->createFolder($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['FolderName']);
 			return true;
 		}
 	}
@@ -412,7 +421,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			if ($this->checkStorageType($Type))
 			{
 				$Name = \trim(\MailSo\Base\Utils::ClearFileName($Name));
-				$mResult = $this->oApiFilesManager->createLink($sUserPiblicId, $Type, $Path, $Link, $Name);
+				$mResult = $this->getManager()->createLink($sUserPiblicId, $Type, $Path, $Link, $Name);
 				$this->Decorator()->UpdateUsedSpace();
 			}
 		}
@@ -434,7 +443,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			{
 				if (isset($oItem['Name']) && strlen(trim($oItem['Name'])) > 0)
 				{
-					$mResult = $this->oApiFilesManager->delete($sUserPiblicId, $aArgs['Type'], $oItem['Path'], $oItem['Name']);
+					$mResult = $this->getManager()->delete($sUserPiblicId, $aArgs['Type'], $oItem['Path'], $oItem['Name']);
 					if (!$mResult)
 					{
 						break;
@@ -459,8 +468,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($aArgs['UserId']);
 			$sNewName = \trim(\MailSo\Base\Utils::ClearFileName($aArgs['NewName']));
 
-			$sNewName = $this->oApiFilesManager->getNonExistentFileName($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $sNewName);
-			$mResult = $this->oApiFilesManager->rename($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Name'], $sNewName, $aArgs['IsLink']);
+			$sNewName = $this->getManager()->getNonExistentFileName($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $sNewName);
+			$mResult = $this->getManager()->rename($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Name'], $sNewName, $aArgs['IsLink']);
 		}
 	}
 
@@ -480,14 +489,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$bFolderIntoItself = $aItem['IsFolder'] && $aArgs['ToPath'] === $aItem['FromPath'].'/'.$aItem['Name'];
 				if (!$bFolderIntoItself)
 				{
-					$mResult = $this->oApiFilesManager->copy(
+					$mResult = $this->getManager()->copy(
 						$sUserPiblicId, 
 						$aItem['FromType'], 
 						$aArgs['ToType'], 
 						$aItem['FromPath'], 
 						$aArgs['ToPath'], 
 						$aItem['Name'], 
-						$this->oApiFilesManager->getNonExistentFileName(
+						$this->getManager()->getNonExistentFileName(
 							$sUserPiblicId, 
 							$aArgs['ToType'], 
 							$aArgs['ToPath'], 
@@ -516,14 +525,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$bFolderIntoItself = $aItem['IsFolder'] && $aArgs['ToPath'] === $aItem['FromPath'].'/'.$aItem['Name'];
 				if (!$bFolderIntoItself)
 				{
-					$mResult = $this->oApiFilesManager->copy(
+					$mResult = $this->getManager()->copy(
 						$sUserPiblicId, 
 						$aItem['FromType'], 
 						$aArgs['ToType'], 
 						$aItem['FromPath'], 
 						$aArgs['ToPath'], 
 						$aItem['Name'], 
-						$this->oApiFilesManager->getNonExistentFileName(
+						$this->getManager()->getNonExistentFileName(
 							$sUserPiblicId, 
 							$aArgs['ToType'], 
 							$aArgs['ToPath'], 
@@ -584,7 +593,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
 			$bFolder = (bool)$IsFolder;
-			$mResult = $this->oApiFilesManager->createPublicLink($sUserPiblicId, $Type, $Path, $Name, $Size, $bFolder);
+			$mResult = $this->getManager()->createPublicLink($sUserPiblicId, $Type, $Path, $Name, $Size, $bFolder);
 			$this->Decorator()->UpdateUsedSpace();
 		}
 	}	
@@ -608,7 +617,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
 
-			$mResult = $this->oApiFilesManager->deletePublicLink($sUserPiblicId, $Type, $Path, $Name);
+			$mResult = $this->getManager()->deletePublicLink($sUserPiblicId, $Type, $Path, $Name);
 			$this->Decorator()->UpdateUsedSpace();
 		}
 	}
@@ -628,7 +637,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$Name = $aArgs['Name'];
 
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
-			$mResult = $this->oApiFilesManager->isFileExists($sUserPiblicId, $Type, $Path, $Name);
+			$mResult = $this->getManager()->isFileExists($sUserPiblicId, $Type, $Path, $Name);
 		}
 	}
 	
