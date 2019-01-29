@@ -309,8 +309,6 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 */
 	public function getFile($iUserId, $sType, $sPath, $sName)
 	{
-		var_dump('files/' . $sType . $sPath . '/' . $sName); exit;
-
 		$sResult = null;
 		$oServer = \Afterlogic\DAV\Server::getInstance();
 		$oServer->setUser($iUserId);
