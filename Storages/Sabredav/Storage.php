@@ -442,6 +442,13 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	{
 		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
 
+		if ($oDirectory instanceof \Sabre\DAVACL\IACL)
+		{
+			$oServer = \Afterlogic\DAV\Server::getInstance();
+			$oAclPlugin = $oServer->getPlugin('acl');
+			$oAclPlugin->checkPrivileges('files/' . $sType . $sPath, '{DAV:}write');
+		}
+
 		if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
 		{
 			$oDirectory->createDirectory($sFolderName);
@@ -496,6 +503,13 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	{
 		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
 
+		if ($oDirectory instanceof \Sabre\DAVACL\IACL)
+		{
+			$oServer = \Afterlogic\DAV\Server::getInstance();
+			$oAclPlugin = $oServer->getPlugin('acl');
+			$oAclPlugin->checkPrivileges('files/' . $sType . $sPath, '{DAV:}write');
+		}
+
 		if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
 		{
 			$oDirectory->createFile($sFileName, $sData, $rangeType, $offset, $extendedProps);
@@ -520,6 +534,14 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$oItem = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName );		
 		if ($oItem !== null)
 		{
+
+			if ($oItem instanceof \Sabre\DAVACL\IACL)
+			{
+				$oServer = \Afterlogic\DAV\Server::getInstance();
+				$oAclPlugin = $oServer->getPlugin('acl');
+				$oAclPlugin->checkPrivileges('files/' . $sType . $sPath . '/' . $sName, '{DAV:}write');
+			}
+
 			if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
 			{
 				$this->updateMin($iUserId, $sType, $sPath, $sName, $sName, $oItem, true);
