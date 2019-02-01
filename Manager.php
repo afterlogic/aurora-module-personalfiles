@@ -58,21 +58,6 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 	}
 
 	/**
-	 * Allows for reading contents of the shared file. [Aurora only.](http://dev.afterlogic.com/aurora)
-	 * 
-	 * @param int $iUserId
-	 * @param int $iType Storage type. Accepted values: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**. 
-	 * @param string $sPath Path to the folder which contains the file, empty string means the file is in the root folder. 
-	 * @param string $sName Filename. 
-	 * 
-	 * @return resource|bool
-	 */
-	public function getSharedFile($iUserId, $iType, $sPath, $sName)
-	{
-		return $this->oStorage->getSharedFile($iUserId, $iType, $sPath, $sName);
-	}
-
-	/**
 	 * Retrieves array of metadata on the specific file. 
 	 * 
 	 * @param int $iUserId Account object 

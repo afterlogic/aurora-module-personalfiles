@@ -104,7 +104,6 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		
 		if ($sUserPublicId)
 		{
-			$sResult = null;
 			$oServer = \Afterlogic\DAV\Server::getInstance();
 			$oServer->setUser($sUserPublicId);
 			$oDirectory = $oServer->tree->getNodeForPath('files/' . $sType . $sPath);		
@@ -135,27 +134,6 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		}
 		
 		return $bResult;
-	}
-
-	/**
-	 * @param int $iUserId
-	 * @param string $sType
-	 * @param string $sPath
-	 * @param string $sName
-	 *
-	 * @return string|null
-	 */
-	public function getSharedFile($iUserId, $sType, $sPath, $sName)
-	{
-		$sResult = null;
-		$sRootPath = $this->getRootPath($iUserId, $sType, true);
-		$FilePath = $sRootPath . '/' . $sPath . '/' . $sName;
-		if (file_exists($FilePath))
-		{
-			$sResult = fopen($FilePath, 'r');
-		}
-		
-		return $sResult;
 	}
 
 	/**
@@ -394,7 +372,6 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
 
-//		var_dump($aItems); exit;
 		if ($oDirectory !== null && $oDirectory instanceof \Afterlogic\DAV\FS\Directory)
 		{
 			if (!empty($sPattern)/* || is_numeric($sPattern)*/)
@@ -625,6 +602,13 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$oNode = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName );		
 		if ($oNode !== null)
 		{
+			if ($oNode instanceof \Sabre\DAVACL\IACL)
+			{
+				$oServer = \Afterlogic\DAV\Server::getInstance();
+				$oAclPlugin = $oServer->getPlugin('acl');
+				$oAclPlugin->checkPrivileges('files/' . $sType . $sPath . '/' . $sName, '{DAV:}write');
+			}
+
 			if (strlen($sNewName) < 200)
 			{
 				$this->updateMin($iUserId, $sType, $sPath, $sName, $sNewName, $oNode);
