@@ -252,7 +252,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			}
 
 			$oResult->Owner = isset($aProps['Owner']) ? $aProps['Owner'] : basename($oItem->getOwner());
-			$oResult->ExtendedProps = isset($aProps['ExtendedProps']) ? $aProps['ExtendedProps'] : false;
+			$oResult->ExtendedProps = isset($aProps['ExtendedProps']) ? $aProps['ExtendedProps'] : [];
 		}
 
 		return $oResult;
