@@ -169,8 +169,10 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			$oResult->Id = $oItem->getId();
 			$oResult->FullPath = $oResult->Name !== '' ? $oResult->Path . '/' . $oResult->Id  : $oResult->Path ;
 
+			$sID = '';
 			if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
 			{
+				$sID = $this->generateHashId($sUserPublicId, $sType, $sFilePath, $oItem->getName());
 				$oResult->IsFolder = true;
 
 				$oResult->AddAction([
@@ -184,7 +186,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				$aProps = $oItem->getProperties(
 					array(
 						'Owner', 
-						'Shared', 
+						'Published',
 						'Name' ,
 						'Link', 
 						'ExtendedProps'
@@ -200,6 +202,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 						'url' => '?download-file/' . $oResult->getHash($sPublicHash) .'/view'
 					]
 				]);
+				$sID = $this->generateHashId($sUserPublicId, $sType, $sFilePath, $oItem->getName());
 
 				$aPathInfo = pathinfo($oResult->Name);
 				if (isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url')
@@ -252,6 +255,10 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				}
 			}
 
+			$oMin = $this->getApiMinManager();
+			$mMin = $oMin->getMinByID($sID);
+
+			$oResult->Published = isset($aProps['Published']) ? $aProps['Published'] : empty($mMin['__hash__']) ? false : true;
 			$oResult->Owner = isset($aProps['Owner']) ? $aProps['Owner'] : basename($oItem->getOwner());
 			$oResult->ExtendedProps = isset($aProps['ExtendedProps']) ? $aProps['ExtendedProps'] : [];
 		}
