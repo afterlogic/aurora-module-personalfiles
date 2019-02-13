@@ -141,6 +141,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 * @param string $sType
 	 * @param object $oItem
 	 * @param string $sPublicHash
+	 * @param string $sPath
 	 *
 	 * @return \Aurora\Modules\Files\Classes\FileItem|null
 	 */
