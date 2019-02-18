@@ -68,9 +68,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Files::GetFileContent::after', array($this, 'onAfterGetFileContent'));
 		$this->subscribeEvent('Files::IsFileExists::after', array($this, 'onAfterIsFileExists'));
 		$this->subscribeEvent('Files::PopulateFileItem::after', array($this, 'onAfterPopulateFileItem'));
-		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
 		$this->subscribeEvent('Files::CheckQuota::after', array($this, 'onAfterCheckQuota'));
 		$this->subscribeEvent('Files::DeletePublicLink::after', array($this, 'onAfterDeletePublicLink'));
+		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
 		
 		\Aurora\Modules\Core\Classes\User::extend(
 			self::GetName(),
