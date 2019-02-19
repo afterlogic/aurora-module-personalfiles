@@ -516,15 +516,15 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	{
 		$oServer = \Afterlogic\DAV\Server::getInstance();
 		$oServer->setUser($iUserId);
-		$oItem = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName );		
+		$sNodePath = 'files/' . $sType . $sPath . '/' . $sName;
+		$oItem = $oServer->tree->getNodeForPath($sNodePath);		
 		if ($oItem !== null)
 		{
-
-			if ($oItem instanceof \Sabre\DAVACL\IACL)
+			if ($oItem instanceof \Sabre\DAVACL\IACL && !$oItem->inRoot)
 			{
 				$oServer = \Afterlogic\DAV\Server::getInstance();
 				$oAclPlugin = $oServer->getPlugin('acl');
-				$oAclPlugin->checkPrivileges('files/' . $sType . $sPath . '/' . $sName, '{DAV:}write');
+				$oAclPlugin->checkPrivileges($sNodePath, '{DAV:}write');
 			}
 
 			if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
