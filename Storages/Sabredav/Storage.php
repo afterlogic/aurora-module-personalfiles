@@ -106,7 +106,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		{
 			$oServer = \Afterlogic\DAV\Server::getInstance();
 			$oServer->setUser($sUserPublicId);
-			$oDirectory = $oServer->tree->getNodeForPath('files/' . $sType . $sPath);		
+			$oDirectory = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/');		
 		}
 
 		return $oDirectory;

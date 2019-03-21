@@ -71,6 +71,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Files::CheckQuota::after', array($this, 'onAfterCheckQuota'));
 		$this->subscribeEvent('Files::DeletePublicLink::after', array($this, 'onAfterDeletePublicLink'));
 		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
+		$this->subscribeEvent('Files::GetSubModules::after', array($this, 'onAfterGetSubModules'));
 		
 		\Aurora\Modules\Core\Classes\User::extend(
 			self::GetName(),
@@ -330,6 +331,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 		]);
 	}
 	
+	/**
+	 * @ignore
+	 * @param array $aArgs Arguments of event.
+	 * @param mixed $mResult Is passed by reference.
+	 */
+	public function onAfterGetSubModules($aArgs, &$mResult)
+	{
+		array_unshift($mResult, static::$sStorageType);
+	}
+
 	/**
 	 * @ignore
 	 * @param array $aArgs Arguments of event.
