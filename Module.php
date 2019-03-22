@@ -570,7 +570,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$iSize = 0;
 
-			$oUser = \Aurora\System\Api::GetModule('Core')->GetUser((int)$aArgs['UserId']);
+			$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId($aArgs['UserId']);
 
 			if ($oUser)
 			{
@@ -662,9 +662,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$Type = $aArgs['Type'];
 		if ($this->checkStorageType($Type))
 		{
-			$sUserPublicId = $aArgs['PublicUserId'];
+			$sUserId = $aArgs['UserId'];
 			$iSize = $aArgs['Size'];
-			$aQuota = \Aurora\System\Api::GetModuleDecorator('Files')->GetQuota($sUserPublicId, $Type);
+			$aQuota = \Aurora\Modules\Files\Module::Decorator()->GetQuota($sUserId, $Type);
 			$mResult = !($aQuota['Limit'] > 0 && $aQuota['Used'] + $iSize > $aQuota['Limit']);
 			return true;
 		}
