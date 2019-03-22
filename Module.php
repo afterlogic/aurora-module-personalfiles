@@ -338,7 +338,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function onAfterGetSubModules($aArgs, &$mResult)
 	{
-		array_unshift($mResult, static::$sStorageType);
+		array_unshift($mResult, 'local.' . static::$sStorageType);
 	}
 
 	/**
