@@ -520,7 +520,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$oItem = $oServer->tree->getNodeForPath($sNodePath);		
 		if ($oItem !== null)
 		{
-			if ($oItem instanceof \Sabre\DAVACL\IACL && !$oItem->inRoot)
+			if ($oItem instanceof \Sabre\DAVACL\IACL && !empty(trim($sPath, '/')))
 			{
 				$oServer = \Afterlogic\DAV\Server::getInstance();
 				$oAclPlugin = $oServer->getPlugin('acl');
