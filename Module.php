@@ -91,7 +91,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::Anonymous);
 		
 		return array(
-			'UserSpaceLimitMb' => $this->getConfig('UserSpaceLimitMb', 0),
+			'UserSpaceLimitMb' => $this->getUserSpaceLimitMb(),
 		);
 	}
 	
@@ -559,6 +559,21 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 	}
 	
+	protected function getUserSpaceLimitMb()
+	{
+		$iSpaceLimitMb = $this->getConfig('UserSpaceLimitMb', 0);
+		$iAuthenticatedUserId = \Aurora\System\Api::getAuthenticatedUserId();
+		$aArgs = array(
+			'UserId' => $iAuthenticatedUserId
+		);
+		$this->broadcastEvent(
+			'PersonalFiles::GetUserSpaceLimitMb',
+			$aArgs,
+			$iSpaceLimitMb
+		);
+		return $iSpaceLimitMb;
+	}
+	
 	/**
 	 * @ignore
 	 * @param array $aArgs Arguments of event.
@@ -570,7 +585,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$iSize = 0;
 
-			$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId($aArgs['UserId']);
+			$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUser($aArgs['UserId']);
 
 			if ($oUser)
 			{
@@ -579,7 +594,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			
 			$mResult = array(
 				'Used' => $iSize,
-				'Limit' => $this->getConfig('UserSpaceLimitMb', 0) * 1024 * 1024
+				'Limit' => $this->getUserSpaceLimitMb() * 1024 * 1024
 			);
 		}
 	}
