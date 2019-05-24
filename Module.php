@@ -567,7 +567,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'UserId' => $iAuthenticatedUserId
 		);
 		$this->broadcastEvent(
-			'PersonalFiles::GetUserSpaceLimitMb',
+			'GetUserSpaceLimitMb',
 			$aArgs,
 			$iSpaceLimitMb
 		);
