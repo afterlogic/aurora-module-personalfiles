@@ -224,7 +224,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				isset($aArgs['ExtendedProps']) ? $aArgs['ExtendedProps'] : null
 			);
 
-			$this->Decorator()->UpdateUsedSpace();
+			self::Decorator()->UpdateUsedSpace();
 			return true;
 		}
 	}
@@ -433,7 +433,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			{
 				$Name = \trim(\MailSo\Base\Utils::ClearFileName($Name));
 				$mResult = $this->getManager()->createLink($sUserPiblicId, $Type, $Path, $Link, $Name);
-				$this->Decorator()->UpdateUsedSpace();
+				self::Decorator()->UpdateUsedSpace();
 			}
 		}
 	}
@@ -462,7 +462,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				}
 			}
 
-			$this->Decorator()->UpdateUsedSpace();
+			self::Decorator()->UpdateUsedSpace();
 			return true;
 		}
 	}
@@ -516,7 +516,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					);
 				}
 			}
-			$this->Decorator()->UpdateUsedSpace();
+			self::Decorator()->UpdateUsedSpace();
 			return true;
 		}
 	}
@@ -554,7 +554,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				}
 			}
 
-			$this->Decorator()->UpdateUsedSpace();
+			self::Decorator()->UpdateUsedSpace();
 			return true;
 		}
 	}
@@ -585,7 +585,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$iSize = 0;
 
-			$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUser($aArgs['UserId']);
+			$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserUnchecked($aArgs['UserId']);
 
 			if ($oUser)
 			{
@@ -620,7 +620,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
 			$bFolder = (bool)$IsFolder;
 			$mResult = $this->getManager()->createPublicLink($sUserPiblicId, $Type, $Path, $Name, $Size, $bFolder);
-			$this->Decorator()->UpdateUsedSpace();
+			self::Decorator()->UpdateUsedSpace();
 		}
 	}	
 	
@@ -644,7 +644,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
 
 			$mResult = $this->getManager()->deletePublicLink($sUserPiblicId, $Type, $Path, $Name);
-			$this->Decorator()->UpdateUsedSpace();
+			self::Decorator()->UpdateUsedSpace();
 		}
 	}
 	
