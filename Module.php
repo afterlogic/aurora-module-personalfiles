@@ -105,8 +105,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::TenantAdmin);
 		
-		$this->setConfig('UserSpaceLimitMb', $UserSpaceLimitMb);
-		return (bool) $this->saveModuleConfig();
+		\Aurora\Modules\Files\Module::getInstance()->setConfig('UserSpaceLimitMb', $UserSpaceLimitMb);
+		return (bool) \Aurora\Modules\Files\Module::getInstance()->saveModuleConfig();
 	}
 	
 	public function UpdateUsedSpace()
@@ -561,7 +561,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	
 	protected function getUserSpaceLimitMb()
 	{
-		$iSpaceLimitMb = $this->getConfig('UserSpaceLimitMb', 0);
+		$iSpaceLimitMb = \Aurora\Modules\Files\Module::getInstance()->getConfig('UserSpaceLimitMb', 0);
 		$iAuthenticatedUserId = \Aurora\System\Api::getAuthenticatedUserId();
 		$aArgs = array(
 			'UserId' => $iAuthenticatedUserId

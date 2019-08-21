@@ -21,38 +21,6 @@ namespace Aurora\Modules\PersonalFiles\Storages\Sabredav;
 class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 {
 	/**
-	 * @var $oApiMinManager \CApiMinManager
-	 */
-	protected $oApiMinManager = null;
-
-	/**
-	 * @param \Aurora\Modules\StandardAuth\Classes\Account|CHelpdeskUser $iUserId
-	 * @param string $sType
-	 * @param string $sPath
-	 * @param string $sFileName
-	 * 
-	 * @return string
-	 */
-	public function generateHashId($iUserId, $sType, $sPath, $sFileName)
-	{
-		return implode('|', array($iUserId, $sType, $sPath, $sFileName));
-	}
-	
-	public function getApiMinManager()
-	{
-		if ($this->oApiMinManager === null)
-		{
-			$oMinModule = \Aurora\System\Api::GetModule('Min');
-			if ($oMinModule)
-			{
-				$this->oApiMinManager = $oMinModule->oApiMinManager;
-			}
-		}
-		
-		return $this->oApiMinManager;
-	}
-
-	/**
 	 * @param string $sUserPublicId
 	 * @param string $sType
 	 * @param bool $bUser
@@ -64,8 +32,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$sRootPath = null;
 		if ($sUserPublicId)
 		{
-			$oCore = \Aurora\System\Api::GetModule('Core');
-			$oUser = $oCore->GetUserByPublicId($sUserPublicId);
+			$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId($sUserPublicId);
 			if ($oUser)
 			{
 				$sUser = $bUser ? '/' . $oUser->UUID : '';
@@ -127,7 +94,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory && $oDirectory->childExists($sName))
 		{
 			$oItem = $oDirectory->getChild($sName);
-			if ($oItem instanceof \Afterlogic\DAV\FS\File)
+			if ($oItem instanceof \Sabre\DAV\FS\Node)
 			{
 				$bResult = true;
 			}
@@ -172,7 +139,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			$sID = '';
 			if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
 			{
-				$sID = $this->generateHashId($sUserPublicId, $sType, $sFilePath, $oItem->getName());
+				$sID = \Aurora\Modules\Min\Module::generateHashId([$sUserPublicId, $sType, $sFilePath, $oItem->getName()]);
 				$oResult->IsFolder = true;
 
 				$oResult->AddAction([
@@ -202,7 +169,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 						'url' => '?download-file/' . $oResult->getHash($sPublicHash) .'/view'
 					]
 				]);
-				$sID = $this->generateHashId($sUserPublicId, $sType, $sFilePath, $oItem->getName());
+				$sID = \Aurora\Modules\Min\Module::generateHashId([$sUserPublicId, $sType, $sFilePath, $oItem->getName()]);
 
 				$aPathInfo = pathinfo($oResult->Name);
 				if (isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url')
@@ -255,8 +222,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				}
 			}
 
-			$oMin = $this->getApiMinManager();
-			$mMin = $oMin->getMinByID($sID);
+			$mMin = \Aurora\Modules\Min\Module::getInstance()->GetMinByID($sID);
 
 			$oResult->Published = isset($aProps['Published']) ? $aProps['Published'] : empty($mMin['__hash__']) ? false : true;
 			$oResult->Owner = isset($aProps['Owner']) ? $aProps['Owner'] : basename($oItem->getOwner());
@@ -321,10 +287,10 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	{
 		$mResult = false;
 
-		$sID = $this->generateHashId($iUserId, $sType, $sPath, $sName);
+		$sID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $sType, $sPath, $sName]);
 		
-		$oMin = $this->getApiMinManager();
-		$mMin = $oMin->getMinByID($sID);
+		$oMin = \Aurora\Modules\Min\Module::getInstance();
+		$mMin = $oMin->GetMinByID($sID);
 		if (!empty($mMin['__hash__']))
 		{
 			$mResult = $mMin['__hash__'];
@@ -357,10 +323,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 */
 	public function deletePublicLink($iUserId, $sType, $sPath, $sName)
 	{
-		$oMin = $this->getApiMinManager();
-
-		return $oMin->deleteMinByID(
-			$this->generateHashId($iUserId, $sType, $sPath, $sName)
+		return \Aurora\Modules\Min\Module::getInstance()->DeleteMinByID(
+			\Aurora\Modules\Min\Module::generateHashId([$iUserId, $sType, $sPath, $sName])
 		);
 	}
 
@@ -554,7 +518,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	{
 		if ($iUserId)
 		{
-			$oApiMinManager = $this->getApiMinManager();
+			$oMin = \Aurora\Modules\Min\Module::getInstance();
 
 			$sRootPath = $this->getRootPath($iUserId, $sType, true);
 
@@ -568,20 +532,20 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 					if ($oChild instanceof \Afterlogic\DAV\FS\File)
 					{
 						$sChildPath = substr(dirname($oChild->getPath()), strlen($sRootPath));
-						$sID = $this->generateHashId($iUserId, $sType, $sChildPath, $oChild->getName());
+						$sID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $sType, $sChildPath, $oChild->getName()]);
 						if ($bDelete)
 						{
-							$oApiMinManager->deleteMinByID($sID);
+							$oMin->DeleteMinByID($sID);
 						}
 						else
 						{
-							$mMin = $oApiMinManager->getMinByID($sID);
+							$mMin = $oMin->GetMinByID($sID);
 							if (!empty($mMin['__hash__']))
 							{
 								$sNewChildPath = $sNewPath . substr($sChildPath, strlen($sOldPath));
-								$sNewID = $this->generateHashId($iUserId, $sType, $sNewChildPath, $oChild->getName());
+								$sNewID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $sType, $sNewChildPath, $oChild->getName()]);
 								$mMin['Path'] = $sNewChildPath;
-								$oApiMinManager->updateMinByID($sID, $mMin, $sNewID);
+								$oMin->UpdateMinByID($sID, $mMin, $sNewID);
 							}					
 						}
 					}
@@ -666,7 +630,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 */
 	public function copy($iUserId, $sFromType, $sToType, $sFromPath, $sToPath, $sName, $sNewName, $bMove = false)
 	{
-		$oApiMinManager = $this->getApiMinManager();
+		$oMin = \Aurora\Modules\Min\Module::getInstance();
 
 		if (empty($sNewName) && !is_numeric($sNewName))
 		{
@@ -697,20 +661,20 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 					else
 					{
 						$sChildPath = substr(dirname($oItem->getPath()), strlen($sFromRootPath));
-						$sID = $this->generateHashId($iUserId, $sFromType, $sChildPath, $oItem->getName());
+						$sID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $sFromType, $sChildPath, $oItem->getName()]);
 
 						$sNewChildPath = substr(dirname($oItemNew->getPath()), strlen($sToRootPath));
 
-						$mMin = $oApiMinManager->getMinByID($sID);
+						$mMin = $oMin->GetMinByID($sID);
 						if (!empty($mMin['__hash__']))
 						{
-							$sNewID = $this->generateHashId($iUserId, $sToType, $sNewChildPath, $oItemNew->getName());
+							$sNewID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $sToType, $sNewChildPath, $oItemNew->getName()]);
 
 							$mMin['Path'] = $sNewChildPath;
 							$mMin['Type'] = $sToType;
 							$mMin['Name'] = $oItemNew->getName();
 
-							$oApiMinManager->updateMinByID($sID, $mMin, $sNewID);
+							$oMin->UpdateMinByID($sID, $mMin, $sNewID);
 						}					
 					}
 					$oItemNew->updateProperties($aProps);

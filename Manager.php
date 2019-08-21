@@ -250,7 +250,7 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 		if ($bResult)
 		{
 			$this->getMinModuleDecorator()->DeleteMinByID(
-					$this->oStorage->generateHashId($iUserId, $iType, $sPath, $sName)
+					\Aurora\Modules\Min\Module::generateHashId([$iUserId, $iType, $sPath, $sName])
 			);
 		}
 		
@@ -302,8 +302,8 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 		$bResult = $this->oStorage->rename($iUserId, $iType, $sPath, $sName, $sNewName);
 		if ($bResult)
 		{
-			$sID = $this->oStorage->generateHashId($iUserId, $iType, $sPath, $sName);
-			$sNewID = $this->oStorage->generateHashId($iUserId, $iType, $sPath, $sNewName);
+			$sID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $iType, $sPath, $sName]);
+			$sNewID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $iType, $sPath, $sNewName]);
 
 			$mData = $this->getMinModuleDecorator()->GetMinByID($sID);
 			
@@ -339,8 +339,8 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 		$GLOBALS['__FILESTORAGE_MOVE_ACTION__'] = false;
 		if ($bResult)
 		{
-			$sID = $this->oStorage->generateHashId($iUserId, $iFromType, $sFromPath, $sName);
-			$sNewID = $this->oStorage->generateHashId($iUserId, $iToType, $sToPath, $sNewName);
+			$sID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $iFromType, $sFromPath, $sName]);
+			$sNewID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $iToType, $sToPath, $sNewName]);
 
 			$mData = $this->getMinModuleDecorator()->GetMinByID($sID);
 			if ($mData)
