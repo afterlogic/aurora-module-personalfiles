@@ -17,6 +17,7 @@ namespace Aurora\Modules\PersonalFiles;
 class Module extends \Aurora\System\Module\AbstractModule
 {
 	protected static $sStorageType = 'personal';
+	protected static $iStorageOrder = 0;
 
 	/**
 	 *
@@ -327,7 +328,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		array_unshift($mResult, [
 			'Type' => static::$sStorageType, 
 			'DisplayName' => $this->i18N('LABEL_STORAGE'), 
-			'IsExternal' => false
+			'IsExternal' => false,
+			'Order' => static::$iStorageOrder
 		]);
 	}
 	
