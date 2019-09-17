@@ -659,13 +659,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		if (isset($aArgs['Type']) && $this->checkStorageType($aArgs['Type']))
 		{
-			$UserId = $aArgs['UserId'];
-			$Type = $aArgs['Type'];
-			$Path = $aArgs['Path'];
-			$Name = $aArgs['Name'];
-
-			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
-			$mResult = $this->getManager()->isFileExists($sUserPiblicId, $Type, $Path, $Name);
+			$mResult = $this->getManager()->isFileExists(
+				\Aurora\System\Api::getUserPublicIdById($aArgs['UserId']), 
+				$aArgs['Type'], 
+				$aArgs['Path'], 
+				$aArgs['Name']
+			);
 		}
 	}
 	
