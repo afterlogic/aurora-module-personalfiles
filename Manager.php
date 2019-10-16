@@ -68,14 +68,14 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 	public function getFileInfo($iUserId, $sType, $sPath, $sName)
 	{
 		$oResult = null;
-		$oDirectory = $this->oStorage->getDirectory($iUserId, $sType, $sPath);
-		if ($oDirectory !== null)
+
+		$oServer = \Afterlogic\DAV\Server::getInstance();
+		$oServer->setUser($iUserId);
+		$oItem = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName);		
+
+		if ($oItem !== null)
 		{
-			$oItem = $oDirectory->getChild($sName);
-			if ($oItem !== null)
-			{
-				$oResult = $this->oStorage->getFileInfo($iUserId, $sType, $oItem);
-			}
+			$oResult = $this->oStorage->getFileInfo($iUserId, $sType, $oItem);
 		}
 		return $oResult;
 	}

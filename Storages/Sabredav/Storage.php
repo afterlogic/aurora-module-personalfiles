@@ -117,14 +117,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$oResult = null;
 		if ($oItem !== null)
 		{
-			if (!isset($sPath))
-			{
-				$sFilePath = $oItem->getRelativePath();
-			}
-			else
-			{
-				$sFilePath = $sPath;
-			}
+			$sFilePath = isset($sPath) ? $sPath : $oItem->getRelativePath();
 
 			$oResult /*@var $oResult \Aurora\Modules\Files\Classes\FileItem */ = new  \Aurora\Modules\Files\Classes\FileItem();
 
@@ -360,7 +353,14 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			}
 			else
 			{
-				$aItems = $oDirectory->getChildren();
+				try
+				{
+					$aItems = $oDirectory->getChildren();
+				}
+				catch (\Exception $oEx)
+				{
+					\Aurora\Api::LogException($oEx);
+				}
 			}
 
 			foreach ($aItems as $oItem) 
