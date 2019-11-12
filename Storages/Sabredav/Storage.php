@@ -269,18 +269,21 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	}
 
 	/**
-	 * @param int $iUserId
+	 * @param int $sUserPublicId
 	 * @param string $sType
 	 * @param string $sPath
 	 * @param string $sName
 	 *
 	 * @return string|false
 	 */
-	public function createPublicLink($iUserId, $sType, $sPath, $sName, $sSize, $bIsFolder)
+	public function createPublicLink($sUserPublicId, $sType, $sPath, $sName, $sSize, $bIsFolder)
 	{
 		$mResult = false;
 
-		$sID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $sType, $sPath, $sName]);
+		$sID = \Aurora\Modules\Min\Module::generateHashId([$sUserPublicId, $sType, $sPath, $sName]);
+
+		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId($sUserPublicId);
+		$iUserId = ($oUser instanceof \Aurora\Modules\Core\Classes\User) ? $oUser->EntityId : null;
 		
 		$oMin = \Aurora\Modules\Min\Module::getInstance();
 		$mMin = $oMin->GetMinByID($sID);
@@ -293,13 +296,14 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			$mResult = $oMin->createMin(
 				$sID, 
 				array(
-					'UserId' => $iUserId,
+					'UserId' => $sUserPublicId,
 					'Type' => $sType, 
 					'Path' => $sPath, 
 					'Name' => $sName,
 					'Size' => $sSize,
 					'IsFolder' => $bIsFolder
-				)
+				),
+				$iUserId
 			);
 		}
 		
