@@ -578,17 +578,24 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$oNode = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName );		
 		if ($oNode !== null)
 		{
-			if ($oNode instanceof \Sabre\DAVACL\IACL)
+			if ($oNode->getName() !== $sNewName)
 			{
-				$oServer = \Afterlogic\DAV\Server::getInstance();
-				$oAclPlugin = $oServer->getPlugin('acl');
-				$oAclPlugin->checkPrivileges('files/' . $sType . $sPath . '/' . $sName, '{DAV:}write');
-			}
+				if ($oNode instanceof \Sabre\DAVACL\IACL)
+				{
+					$oServer = \Afterlogic\DAV\Server::getInstance();
+					$oAclPlugin = $oServer->getPlugin('acl');
+					$oAclPlugin->checkPrivileges('files/' . $sType . $sPath . '/' . $sName, '{DAV:}write');
+				}
 
-			if (strlen($sNewName) < 200)
+				if (strlen($sNewName) < 200)
+				{
+					$this->updateMin($iUserId, $sType, $sPath, $sName, $sNewName, $oNode);
+					$oNode->setName($sNewName);
+					return true;
+				}
+			}
+			else
 			{
-				$this->updateMin($iUserId, $sType, $sPath, $sName, $sNewName, $oNode);
-				$oNode->setName($sNewName);
 				return true;
 			}
 		}
