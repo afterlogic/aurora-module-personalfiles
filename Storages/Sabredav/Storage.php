@@ -262,7 +262,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 		if ($oNode instanceof \Afterlogic\DAV\FS\File)
 		{
-			$sResult = $oNode->get();
+			$sResult = $oNode->get(false);
 		}
 
 		return $sResult;
