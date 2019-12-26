@@ -215,6 +215,12 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 		{
 			$sFileName = $this->oStorage->getNonExistentFileName($iUserId, $iType, $sPath, $sFileName);
 		}
+		else if (!$rangeType)
+		{
+			// rangeType 2 means override existing file
+			$rangeType = 2;
+		}
+
 		return $this->oStorage->createFile($iUserId, $iType, $sPath, $sFileName, $mData, $rangeType, $offset, $extendedProps);
 	}
 	
