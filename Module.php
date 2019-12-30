@@ -104,7 +104,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					break;
 				case (\Aurora\System\Enums\UserRole::TenantAdmin):
 					// everything is allowed for TenantAdmin
-					$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUser($iUserId);
+					$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUser($UserId);
 					if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 					{
 						if ($oAuthenticatedUser->IdTenant === $oUser->IdTenant)
