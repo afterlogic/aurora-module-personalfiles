@@ -81,6 +81,56 @@ class Module extends \Aurora\System\Module\AbstractModule
 			]
 		);		
 	}
+
+	public function CheckAccess(&$UserId)
+	{
+		$bAccessDenied = true;
+		
+		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
+
+		if ($UserId === null)
+		{
+			$UserId = $oAuthenticatedUser->EntityId;
+		}
+		
+		if (isset($UserId))
+		{
+			$iUserRole = $oAuthenticatedUser instanceof \Aurora\Modules\Core\Classes\User ? $oAuthenticatedUser->Role : \Aurora\System\Enums\UserRole::Anonymous;
+			switch ($iUserRole)
+			{
+				case (\Aurora\System\Enums\UserRole::SuperAdmin):
+					// everything is allowed for SuperAdmin
+					$bAccessDenied = false;
+					break;
+				case (\Aurora\System\Enums\UserRole::TenantAdmin):
+					// everything is allowed for TenantAdmin
+					$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUser($iUserId);
+					if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+					{
+						if ($oAuthenticatedUser->IdTenant === $oUser->IdTenant)
+						{
+							$bAccessDenied = false;
+						}
+					}
+					break;
+				case (\Aurora\System\Enums\UserRole::NormalUser):
+					// User identifier shoud be checked
+					if ($UserId === $oAuthenticatedUser->EntityId)
+					{
+						$bAccessDenied = false;
+					}
+					break;
+				case (\Aurora\System\Enums\UserRole::Customer):
+				case (\Aurora\System\Enums\UserRole::Anonymous):
+					// everything is forbidden for Customer and Anonymous users
+					break;
+			}
+			if ($bAccessDenied)
+			{
+				throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::AccessDenied);
+			}
+		}			 
+	}	
 	
 	/**
 	 * Obtains list of module settings.
@@ -612,12 +662,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		if ($this->checkStorageType($aArgs['Type']))
 		{
-			$UserId = $aArgs['UserId'];
+			$UserId = (int) $aArgs['UserId'];
 			$Type = $aArgs['Type'];
 			$Path = $aArgs['Path'];
 			$Name = $aArgs['Name'];
 			$Size = $aArgs['Size'];
 			$IsFolder = $aArgs['IsFolder'];
+
+			$this->CheckAccess($UserId);
 
 			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
