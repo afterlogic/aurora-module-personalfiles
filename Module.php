@@ -615,10 +615,18 @@ class Module extends \Aurora\System\Module\AbstractModule
 	protected function getUserSpaceLimitMb()
 	{
 		$iSpaceLimitMb = \Aurora\Modules\Files\Module::getInstance()->getConfig('UserSpaceLimitMb', 0);
-		$iAuthenticatedUserId = \Aurora\System\Api::getAuthenticatedUserId();
-		$aArgs = array(
-			'UserId' => $iAuthenticatedUserId
-		);
+		
+		$iUserId = \Aurora\System\Api::getAuthenticatedUserId();
+		$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserUnchecked($iUserId);
+
+		if ($oUser)
+		{
+			$iSpaceLimitMb = $oUser->{'Files::UserSpaceLimitMb'};
+		}
+
+		$aArgs = [
+			'UserId' => $iUserId
+		];
 		$this->broadcastEvent(
 			'GetUserSpaceLimitMb',
 			$aArgs,
