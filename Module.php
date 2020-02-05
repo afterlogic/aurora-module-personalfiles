@@ -681,7 +681,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
-			$bFolder = (bool)$IsFolder;
+			$bFolder = (bool) $IsFolder;
 			$mResult = $this->getManager()->createPublicLink($sUserPiblicId, $Type, $Path, $Name, $Size, $bFolder);
 			self::Decorator()->UpdateUsedSpace();
 		}

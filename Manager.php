@@ -252,45 +252,9 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 	 */
 	public function delete($iUserId, $iType, $sPath, $sName)
 	{
-		$bResult = $this->oStorage->delete($iUserId, $iType, $sPath, $sName);
-		if ($bResult)
-		{
-			$this->getMinModuleDecorator()->DeleteMinByID(
-					\Aurora\Modules\Min\Module::generateHashId([$iUserId, $iType, $sPath, $sName])
-			);
-		}
-		
-		return $bResult;
+		return $this->oStorage->delete($iUserId, $iType, $sPath, $sName);
 	}
 
-	/**
-	 * 
-	 * @param int $iUserId
-	 * @param int $sType
-	 * @param string $sPath
-	 * @param string $sName
-	 * @param int $sSize
-	 * 
-	 * @return array
-	 */
-	private function generateMinArray($iUserId, $sType, $sPath, $sName, $sSize, $bIsFolder = false)
-	{
-		$aData = null;
-		if ($iUserId)
-		{
-			$aData = array(
-				'UserId' => $iUserId,
-				'Type' => $sType, 
-				'Path' => $sPath, 
-				'Name' => $sName,
-				'Size' => $sSize,
-				'IsFolder' => $bIsFolder
-			);
-		}
-
-		return $aData;
-	}
-	
 	/**
 	 * Renames file or folder. 
 	 * 
@@ -305,24 +269,7 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 	 */
 	public function rename($iUserId, $iType, $sPath, $sName, $sNewName, $bIsLink)
 	{
-		$bResult = $this->oStorage->rename($iUserId, $iType, $sPath, $sName, $sNewName);
-		if ($bResult)
-		{
-			$sID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $iType, $sPath, $sName]);
-			$sNewID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $iType, $sPath, $sNewName]);
-
-			$mData = $this->getMinModuleDecorator()->GetMinByID($sID);
-			
-			if ($mData && $iUserId)
-			{
-				$aData = $this->generateMinArray($iUserId, $iType, $sPath, $sNewName, $mData['Size']);
-				if ($aData)
-				{
-					$this->getMinModuleDecorator()->UpdateMinByID($sID, $aData, $sNewID);
-				}
-			}
-		}
-		return $bResult;
+		return $this->oStorage->rename($iUserId, $iType, $sPath, $sName, $sNewName);
 	}
 	
 	/**
@@ -343,21 +290,6 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 		$GLOBALS['__FILESTORAGE_MOVE_ACTION__'] = true;
 		$bResult = $this->oStorage->copy($iUserId, $iFromType, $iToType, $sFromPath, $sToPath, $sName, $sNewName, true);
 		$GLOBALS['__FILESTORAGE_MOVE_ACTION__'] = false;
-		if ($bResult)
-		{
-			$sID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $iFromType, $sFromPath, $sName]);
-			$sNewID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $iToType, $sToPath, $sNewName]);
-
-			$mData = $this->getMinModuleDecorator()->GetMinByID($sID);
-			if ($mData)
-			{
-				$aData = $this->generateMinArray($iUserId, $iToType, $sToPath, $sNewName, $mData['Size']);
-				if ($aData)
-				{
-					$this->getMinModuleDecorator()->UpdateMinByID($sID, $aData, $sNewID);
-				}
-			}
-		}
 		return $bResult;
 	}
 
