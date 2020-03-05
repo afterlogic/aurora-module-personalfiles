@@ -19,6 +19,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 	protected static $sStorageType = 'personal';
 	protected static $iStorageOrder = 0;
 
+	protected $oBeforeDeleteUser = null;
+
 	/**
 	 *
 	 * @var \CApiFilesManager
@@ -71,8 +73,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Files::PopulateFileItem::after', array($this, 'onAfterPopulateFileItem'));
 		$this->subscribeEvent('Files::CheckQuota::after', array($this, 'onAfterCheckQuota'));
 		$this->subscribeEvent('Files::DeletePublicLink::after', array($this, 'onAfterDeletePublicLink'));
-		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
 		$this->subscribeEvent('Files::GetSubModules::after', array($this, 'onAfterGetSubModules'));
+
+		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
+		$this->subscribeEvent('Core::DeleteUser::after', array($this, 'onAfterDeleteUser'));
 		
 		\Aurora\Modules\Core\Classes\User::extend(
 			self::GetName(),
@@ -360,11 +364,21 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		if (isset($aArgs['UserId']))
 		{
-			$oUser = \Aurora\System\Api::getUserById($aArgs['UserId']);
-			if ($oUser)
-			{
-				$this->getManager()->ClearFiles($oUser->PublicId);
-			}
+			$this->oBeforeDeleteUser = \Aurora\System\Api::getUserById($aArgs['UserId']);
+		}
+	}
+
+	/**
+	 * @ignore
+	 * @param array $aArgs Arguments of event.
+	 * @param mixed $mResult Is passed by reference.
+	 */
+	public function onAfterDeleteUser($aArgs, $mResult)
+	{
+		if ($mResult && $this->oBeforeDeleteUser instanceof \Aurora\Modules\Core\Classes\User)
+		{
+			$this->getManager()->ClearFiles($this->oBeforeDeleteUser->PublicId);
+			$this->oBeforeDeleteUser = null;
 		}
 	}
 
