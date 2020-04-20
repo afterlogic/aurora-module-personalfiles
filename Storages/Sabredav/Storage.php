@@ -127,8 +127,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			$oResult->Path = $sFilePath;
 			$oResult->Name = $oItem->getName();
 			$oResult->Id = $oItem->getId();
-			$oResult->FullPath = $oResult->Name !== '' ? $oResult->Path . '/' . $oResult->Id  : $oResult->Path ;
-
+			$oResult->FullPath = $oResult->Name !== '' ? $oResult->Path . '/' . $oResult->Id  : $oResult->Path;
+			$oResult->ETag = \trim($oItem->getETag(), '"');
 			$sID = '';
 			if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
 			{
