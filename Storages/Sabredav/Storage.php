@@ -167,12 +167,17 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				$aPathInfo = pathinfo($oResult->Name);
 				if (isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url')
 				{
-					$aUrlFileInfo = \Aurora\System\Utils::parseIniString(stream_get_contents($oItem->get()));
+					$mFileData = $oItem->get();
+					if (\is_resource($mFileData))
+					{
+						$mFileData = stream_get_contents($oItem->get());
+					}
+					$aUrlFileInfo = \Aurora\System\Utils::parseIniString($mFileData);
 					if ($aUrlFileInfo && isset($aUrlFileInfo['URL']))
 					{
 						$oResult->IsLink = true;
 						$oResult->LinkUrl = $aUrlFileInfo['URL'];
-						
+
 						$oResult->AddAction([
 							'open' => [
 								'url' => $aUrlFileInfo['URL']
