@@ -170,7 +170,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 					$mFileData = $oItem->get();
 					if (\is_resource($mFileData))
 					{
-						$mFileData = stream_get_contents($oItem->get());
+						$mFileData = stream_get_contents($mFileData);
 					}
 					$aUrlFileInfo = \Aurora\System\Utils::parseIniString($mFileData);
 					if ($aUrlFileInfo && isset($aUrlFileInfo['URL']))
