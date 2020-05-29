@@ -222,7 +222,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 			$mMin = \Aurora\Modules\Min\Module::getInstance()->GetMinByID($sID);
 
-			$oResult->Published = isset($aProps['Published']) ? $aProps['Published'] : empty($mMin['__hash__']) ? false : true;
+			$oResult->Published = (isset($aProps['Published']) ? $aProps['Published'] : empty($mMin['__hash__'])) ? false : true;
 			$oResult->Owner = isset($aProps['Owner']) ? $aProps['Owner'] : basename($oItem->getOwner());
 			$oResult->ExtendedProps = isset($aProps['ExtendedProps']) ? $aProps['ExtendedProps'] : [];
 		}
