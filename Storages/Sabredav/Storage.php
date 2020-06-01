@@ -438,9 +438,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				"[InternetShortcut]\r\nURL=\"" . $sLink . "\"\r\n"
 			);
 			$oItem = $oDirectory->getChild($sFileName);
-			$oItem->updateProperties(array(
-				'Owner' => $iUserId
-			));
+			$oItem->setProperty('Owner', $iUserId);
 
 			return true;
 		}
@@ -624,9 +622,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 		if ($oItem)
 		{
-			$oItem->updateProperties(array(
-				'Name' => $sNewName
-			));
+			$oItem->setProperty('Name', $sNewName);
 			return true;
 		}
 		return false;
