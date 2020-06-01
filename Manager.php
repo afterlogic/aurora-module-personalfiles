@@ -347,4 +347,42 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 	{
 		$this->oStorage->clearPrivateFiles($sPublicId);
 	}
+
+	/**
+	 *
+	 * @param string $sUserPublicId
+	 * @param string $sType Storage type. Accepted values: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**.
+	 * @param string $sPath Path to the folder which contains the file, empty string means the file is in the root folder.
+	 * @param string $sName Filename.
+	 * @param array $ExtendedProps
+	 *
+	 * @return bool
+	 */
+	public function updateExtendedProps($sUserPublicId, $sType, $sPath, $sName, $aExtendedProps)
+	{
+		$bResult = false;
+
+		$oServer = \Afterlogic\DAV\Server::getInstance();
+		$oServer->setUser($sUserPublicId);
+		$oItem = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName);
+		if ($oItem instanceof \Afterlogic\DAV\FS\File)
+		{
+			$aCurrentExtendedProps = $oItem->getProperty('ExtendedProps');
+			foreach ($aExtendedProps as $sPropName => $propValue)
+			{
+				if ($propValue === null)
+				{
+					unset($aCurrentExtendedProps[$sPropName]);
+				}
+				else
+				{
+					$aCurrentExtendedProps[$sPropName] = $propValue;
+				}
+			}
+			$oItem->setProperty('ExtendedProps', $aCurrentExtendedProps);
+			$bResult = true;
+		}
+
+		return $bResult;
+	}
 }
