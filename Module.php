@@ -240,7 +240,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$UserId = $aArgs['UserId'];
-			$this->CheckAccess($UserId);
 
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
 			$iOffset = isset($aArgs['Offset']) ? $aArgs['Offset'] : 0;
