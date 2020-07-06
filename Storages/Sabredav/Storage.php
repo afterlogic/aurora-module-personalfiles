@@ -3,7 +3,7 @@
  * This code is licensed under AGPLv3 license or Afterlogic Software License
  * if commercial version of the product was purchased.
  * For full statements of the licenses see LICENSE-AFTERLOGIC and LICENSE-AGPL3 files.
- * 
+ *
  */
 
 namespace Aurora\Modules\PersonalFiles\Storages\Sabredav;
@@ -14,7 +14,7 @@ namespace Aurora\Modules\PersonalFiles\Storages\Sabredav;
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  *
  * @internal
- * 
+ *
  * @package Filestorage
  * @subpackage Storages
  */
@@ -36,7 +36,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			if ($oUser)
 			{
 				$sUser = $bUser ? '/' . $oUser->UUID : '';
-				$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
+				$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT .
 					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL . $sUser;
 			}
 
@@ -45,12 +45,12 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				$iTenantId = $oUser ? $oUser->IdTenant : 0;
 
 				$sTenant = $bUser ? '/' . $iTenantId : '';
-				$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
+				$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT .
 					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE . $sTenant;
 			}
 			else if ($sType === \Aurora\System\Enums\FileStorageType::Shared)
 			{
-				$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
+				$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT .
 					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_SHARED . $sUser;
 			}
 		}
@@ -68,12 +68,12 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	public function getDirectory($sUserPublicId, $sType, $sPath = '')
 	{
 		$oDirectory = null;
-		
+
 		if ($sUserPublicId)
 		{
 			$oServer = \Afterlogic\DAV\Server::getInstance();
 			$oServer->setUser($sUserPublicId);
-			$oDirectory = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/');		
+			$oDirectory = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/');
 		}
 
 		return $oDirectory;
@@ -99,7 +99,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				$bResult = true;
 			}
 		}
-		
+
 		return $bResult;
 	}
 
@@ -145,10 +145,10 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			{
 				$aProps = $oItem->getProperties(
 					array(
-						'Owner', 
+						'Owner',
 						'Published',
 						'Name' ,
-						'Link', 
+						'Link',
 						'ExtendedProps'
 					)
 				);
@@ -190,14 +190,14 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 							'download' => [
 								'url' => '?download-file/' . $oResult->getHash($sPublicHash)
 							]
-						]);						
+						]);
 					}
 					if (isset($aPathInfo['filename']))
 					{
 						$oResult->ContentType = \Aurora\System\Utils::MimeContentType($aPathInfo['filename']);
-					}							
+					}
 				}
-				else						
+				else
 				{
 					$oResult->AddAction([
 						'download' => [
@@ -262,7 +262,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$sResult = null;
 		$oServer = \Afterlogic\DAV\Server::getInstance();
 		$oServer->setUser($iUserId);
-		$oNode = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName);		
+		$oNode = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName);
 
 
 		if ($oNode instanceof \Afterlogic\DAV\FS\File)
@@ -289,7 +289,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId($sUserPublicId);
 		$iUserId = ($oUser instanceof \Aurora\Modules\Core\Classes\User) ? $oUser->EntityId : null;
-		
+
 		$oMin = \Aurora\Modules\Min\Module::getInstance();
 		$mMin = $oMin->GetMinByID($sID);
 		if (!empty($mMin['__hash__']))
@@ -299,11 +299,11 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		else
 		{
 			$mResult = $oMin->createMin(
-				$sID, 
+				$sID,
 				array(
 					'UserId' => $sUserPublicId,
-					'Type' => $sType, 
-					'Path' => $sPath, 
+					'Type' => $sType,
+					'Path' => $sPath,
 					'Name' => $sName,
 					'Size' => $sSize,
 					'IsFolder' => $bIsFolder
@@ -311,7 +311,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				$iUserId
 			);
 		}
-		
+
 		return '?/files-pub/' . $mResult . '/list';
 	}
 
@@ -372,17 +372,17 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				}
 			}
 
-			foreach ($aItems as $oItem) 
+			foreach ($aItems as $oItem)
 			{
 				$aResult[] = $this->getFileInfo($iUserId, $sType, $oItem, $sPublicHash);
 			}
-			
-			usort($aResult, 
-				function ($a, $b) 
-					{ 
-						return ($a->Name > $b->Name); 
+
+			usort($aResult,
+				function ($a, $b)
+					{
+						return ($a->Name > $b->Name);
 					}
-			);			
+			);
 		}
 
 		return $aResult;
@@ -434,7 +434,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			$sFileName = $sName . '.url';
 
 			$oDirectory->createFile(
-				$sFileName, 
+				$sFileName,
 				"[InternetShortcut]\r\nURL=\"" . $sLink . "\"\r\n"
 			);
 			$oItem = $oDirectory->getChild($sFileName);
@@ -488,7 +488,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$oServer = \Afterlogic\DAV\Server::getInstance();
 		$oServer->setUser($iUserId);
 		$sNodePath = 'files/' . $sType . $sPath . '/' . $sName;
-		$oItem = $oServer->tree->getNodeForPath($sNodePath);		
+		$oItem = $oServer->tree->getNodeForPath($sNodePath);
 		if ($oItem !== null)
 		{
 			if ($oItem instanceof \Sabre\DAVACL\IACL && !empty(trim($sPath, '/')))
@@ -553,7 +553,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 								$sNewID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $sType, $sNewChildPath, $oChild->getName()]);
 								$mMin['Path'] = $sNewChildPath;
 								$oMin->UpdateMinByID($sID, $mMin, $sNewID);
-							}					
+							}
 						}
 					}
 					if ($oChild instanceof \Afterlogic\DAV\FS\Directory)
@@ -578,7 +578,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	{
 		$oServer = \Afterlogic\DAV\Server::getInstance();
 		$oServer->setUser($iUserId);
-		$oNode = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName );		
+		$oNode = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName );
 		if ($oNode !== null)
 		{
 			if ($oNode->getName() !== $sNewName)
@@ -666,7 +666,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 					$oItemNew = $oToDirectory->getChild($sNewName);
 					$aProps = $oItem->getProperties(array());
-					if (!$bMove)				
+					if (!$bMove)
 					{
 						$aProps['Owner'] = $iUserId;
 					}
@@ -687,7 +687,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 							$mMin['Name'] = $oItemNew->getName();
 
 							$oMin->UpdateMinByID($sID, $mMin, $sNewID);
-						}					
+						}
 					}
 					$oItemNew->updateProperties($aProps);
 				}
@@ -698,19 +698,19 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 					foreach ($oChildren as $oChild)
 					{
 						$sChildNewName = $this->getNonExistentFileName(
-								$iUserId, 
-								$sToType, 
-								$sToPath . '/' . $sNewName, 
+								$iUserId,
+								$sToType,
+								$sToPath . '/' . $sNewName,
 								$oChild->getName()
 						);
 						$this->copy(
-							$iUserId, 
-							$sFromType, 
-							$sToType, 
-							$sFromPath . '/' . $sName, 
-							$sToPath . '/' . $sNewName, 
-							$oChild->getName(), 
-							$sChildNewName, 
+							$iUserId,
+							$sFromType,
+							$sToType,
+							$sFromPath . '/' . $sName,
+							$sToPath . '/' . $sNewName,
+							$oChild->getName(),
+							$sChildNewName,
 							$bMove
 						);
 					}
@@ -727,16 +727,16 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 	/**
 	 * Returns user used space in bytes for specified storages.
-	 * 
+	 *
 	 * @param int $iUserId User identifier.
 	 * @param string $aTypes Storage type list. Accepted values in array: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**.
-	 * 
+	 *
 	 * @return int;
 	 */
 	public function getUserSpaceUsed($iUserId, $aTypes)
 	{
 		$iUsageSize = 0;
-		
+
 		if ($iUserId)
 		{
 			foreach ($aTypes as $sType)
@@ -746,7 +746,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				$iUsageSize += (int) $aSize['size'];
 			}
 		}
-		
+
 		return $iUsageSize;
 	}
 
