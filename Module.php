@@ -93,9 +93,17 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
 
-		if ($UserId === null)
+		if ($UserId === null && $oAuthenticatedUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
 			$UserId = $oAuthenticatedUser->EntityId;
+		}
+		if (\is_string($UserId))
+		{
+			$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId($UserId);
+			if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+			{
+				$UserId = $oUser->EntityId;
+			}
 		}
 
 		if (isset($UserId))
