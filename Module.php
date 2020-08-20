@@ -90,6 +90,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function CheckAccess(&$UserId)
 	{
 		$bAccessDenied = true;
+		
+		if (\Aurora\System\Api::accessCheckIsSkipped())
+		{
+			$bAccessDenied = false;
+		}
 
 		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
 
