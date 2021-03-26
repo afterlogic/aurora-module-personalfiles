@@ -79,6 +79,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
 		$this->subscribeEvent('Core::DeleteUser::after', array($this, 'onAfterDeleteUser'));
 
+		$this->subscribeEvent('Files::GetNonExistentFileName::after', array($this, 'onAfterGetNonExistentFileName'));
+
 		\Aurora\Modules\Core\Classes\User::extend(
 			self::GetName(),
 			[
@@ -831,4 +833,19 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 	}
 
+	public function onAfterGetNonExistentFileName(&$aArgs, &$mResult)
+	{
+		if ($this->checkStorageType($aArgs['Type']))
+		{
+			$UserId = $aArgs['UserId'];
+			$this->CheckAccess($UserId);
+			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$mResult = $this->getManager()->getNonExistentFileName(
+				$sUserPiblicId,
+				$aArgs['Type'],
+				$aArgs['Path'],
+				$aArgs['Name']
+			);
+		}
+	}
 }
