@@ -115,7 +115,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	public function getFileInfo($sUserPublicId, $sType, $oItem, $sPublicHash = null, $sPath = null)
 	{
 		$oResult = null;
-		if ($oItem !== null)
+		if ($oItem)
 		{
 			$sFilePath = isset($sPath) ? $sPath : $oItem->getRelativePath();
 
