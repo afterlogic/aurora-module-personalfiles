@@ -567,7 +567,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 
 			self::Decorator()->UpdateUsedSpace();
-			return true;
 		}
 	}
 
@@ -610,6 +609,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$bFolderIntoItself = $aItem['IsFolder'] && $aArgs['ToPath'] === $aItem['FromPath'].'/'.$aItem['Name'];
 				if (!$bFolderIntoItself)
 				{
+					$sNewName = isset($aItem['NewName']) ? $aItem['NewName'] : $aItem['Name'];
 					$mResult = $this->getManager()->copy(
 						$sUserPiblicId,
 						$aItem['FromType'],
@@ -621,13 +621,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 							$sUserPiblicId,
 							$aArgs['ToType'],
 							$aArgs['ToPath'],
-							$aItem['Name']
+							$sNewName
 						)
 					);
 				}
 			}
 			self::Decorator()->UpdateUsedSpace();
-			return true;
 		}
 	}
 
@@ -649,6 +648,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$bFolderIntoItself = $aItem['IsFolder'] && $aArgs['ToPath'] === $aItem['FromPath'].'/'.$aItem['Name'];
 				if (!$bFolderIntoItself)
 				{
+					$sNewName = isset($aItem['NewName']) ? $aItem['NewName'] : $aItem['Name'];
 					$mResult = $this->getManager()->copy(
 						$sUserPiblicId,
 						$aItem['FromType'],
@@ -660,7 +660,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 							$sUserPiblicId,
 							$aArgs['ToType'],
 							$aArgs['ToPath'],
-							$aItem['Name']
+							$sNewName
 						),
 						true
 					);
@@ -668,7 +668,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 
 			self::Decorator()->UpdateUsedSpace();
-			return true;
 		}
 	}
 
