@@ -691,16 +691,18 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 					}
 					$oItemNew->updateProperties($aProps);
 
-					try
+					if (!isset($GLOBALS['__SKIP_HISTORY__']))
 					{
-						$oHistoryNode = $oFromDirectory->getChild($sName . '.hist');
-						if ($oHistoryNode instanceof \Afterlogic\DAV\FS\Directory)
+						try
 						{
-							$this->copy($iUserId, $sFromType, $sToType, $sFromPath, $sToPath, $sName . '.hist', $sNewName . '.hist', $bMove);
+							$oHistoryNode = $oFromDirectory->getChild($sName . '.hist');
+							if ($oHistoryNode instanceof \Afterlogic\DAV\FS\Directory)
+							{
+								$this->copy($iUserId, $sFromType, $sToType, $sFromPath, $sToPath, $sName . '.hist', $sNewName . '.hist', $bMove);
+							}
 						}
+						catch (\Exception $oEx) {}
 					}
-					catch (\Exception $oEx) {}
-
 				}
 				if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
 				{
