@@ -466,7 +466,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			$oAclPlugin->checkPrivileges('files/' . $sType . $sPath, '{DAV:}write');
 		}
 
-		if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
+		if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory || $oDirectory instanceof \Afterlogic\DAV\FS\Shared\Root)
 		{
 			$oDirectory->createFile($sFileName, $sData, $rangeType, $offset, $extendedProps);
 			return true;
