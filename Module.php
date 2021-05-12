@@ -75,6 +75,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Files::DeletePublicLink::after', array($this, 'onAfterDeletePublicLink'));
 		$this->subscribeEvent('Files::GetSubModules::after', array($this, 'onAfterGetSubModules'));
 		$this->subscribeEvent('Files::UpdateExtendedProps::after', array($this, 'onAfterUpdateExtendedProps'));
+		$this->subscribeEvent('Files::GetExtendedProps::after', array($this, 'onAfterGetExtendedProps'));
 
 		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
 		$this->subscribeEvent('Core::DeleteUser::after', array($this, 'onAfterDeleteUser'));
@@ -829,6 +830,27 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$aArgs['Path'],
 				$aArgs['Name'],
 				$aArgs['ExtendedProps']
+			);
+		}
+	}
+
+	/**
+	 * @ignore
+	 * @param array $aArgs Arguments of event.
+	 * @param mixed $mResult Is passed by reference.
+	 */
+	public function onAfterGetExtendedProps(&$aArgs, &$mResult)
+	{
+		if ($this->checkStorageType($aArgs['Type']))
+		{
+			$UserId = $aArgs['UserId'];
+			$this->CheckAccess($UserId);
+			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$mResult = $this->getManager()->getExtendedProps(
+				$sUserPiblicId,
+				$aArgs['Type'],
+				$aArgs['Path'],
+				$aArgs['Name']
 			);
 		}
 	}

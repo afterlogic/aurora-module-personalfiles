@@ -385,4 +385,29 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 
 		return $bResult;
 	}
+
+	/**
+	 *
+	 * @param string $sUserPublicId
+	 * @param string $sType Storage type. Accepted values: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**.
+	 * @param string $sPath Path to the folder which contains the file, empty string means the file is in the root folder.
+	 * @param string $sName Filename.
+	 * @param array $ExtendedProps
+	 *
+	 * @return bool
+	 */
+	public function getExtendedProps($sUserPublicId, $sType, $sPath, $sName)
+	{
+		$bResult = false;
+
+		$oServer = \Afterlogic\DAV\Server::getInstance();
+		$oServer->setUser($sUserPublicId);
+		$oItem = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName);
+		if ($oItem instanceof \Afterlogic\DAV\FS\File)
+		{
+			$bResult = $oItem->getProperty('ExtendedProps');
+		}
+
+		return $bResult;
+	}
 }
