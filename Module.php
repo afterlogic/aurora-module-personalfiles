@@ -607,7 +607,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			foreach ($aArgs['Files'] as $aItem)
 			{
-				$bFolderIntoItself = $aItem['IsFolder'] && $aArgs['ToPath'] === $aItem['FromPath'].'/'.$aItem['Name'];
+				$bFolderIntoItself = isset($aItem['IsFolder']) && $aItem['IsFolder'] && $aArgs['ToPath'] === $aItem['FromPath'].'/'.$aItem['Name'];
 				if (!$bFolderIntoItself)
 				{
 					$sNewName = isset($aItem['NewName']) ? $aItem['NewName'] : $aItem['Name'];

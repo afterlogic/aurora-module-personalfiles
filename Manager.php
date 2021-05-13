@@ -75,7 +75,7 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 
 		if ($oItem !== null)
 		{
-			$oResult = $this->oStorage->getFileInfo($iUserId, $sType, $oItem);
+			$oResult = $this->oStorage->getFileInfo($iUserId, $sType, $oItem, null, $sPath);
 		}
 		return $oResult;
 	}
