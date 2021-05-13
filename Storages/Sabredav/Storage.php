@@ -665,6 +665,21 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 					$oToDirectory->createFile($sNewName, $oItem->get());
 
 					$oItemNew = $oToDirectory->getChild($sNewName);
+
+					if ($oItemNew)
+					{
+						$oSharedFiles = \Aurora\Api::GetModule('SharedFiles');
+						if ($oSharedFiles)
+						{
+							$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
+							$aShares = $oPdo->getShares('principals/' . $iUserId, $sFromType, $sFromPath . '/' . $sName);
+							foreach ($aShares as $aShare)
+							{
+								$sNonExistentFileName = $oSharedFiles->getNonExistentFileName('principals/' . $iUserId, $sNewName);
+								$oPdo->createSharedFile('principals/' . $iUserId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], false);
+							}
+						}
+					}
 					$aProps = $oItem->getProperties(array());
 					if (!$bMove)
 					{
@@ -698,7 +713,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 							$oHistoryNode = $oFromDirectory->getChild($sName . '.hist');
 							if ($oHistoryNode instanceof \Afterlogic\DAV\FS\Directory)
 							{
-								$this->copy($iUserId, $sFromType, $sToType, $sFromPath, $sToPath, $sName . '.hist', $sNewName . '.hist', $bMove);
+								$this->copy($iUserId, $sFromType, $sToType, $sFromPath, $sToPath, $sName . '.hist', $sNewName . '.hist', false);
 							}
 						}
 						catch (\Exception $oEx) {}
@@ -707,6 +722,18 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
 				{
 					$oToDirectory->createDirectory($sNewName);
+
+					$oSharedFiles = \Aurora\Api::GetModule('SharedFiles');
+					if ($oSharedFiles)
+					{
+						$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
+						$aShares = $oPdo->getShares('principals/' . $iUserId, $sFromType, $sFromPath . '/' . $sName);
+						foreach ($aShares as $aShare)
+						{
+							$sNonExistentFileName = $oSharedFiles->getNonExistentFileName('principals/' . $iUserId, $sNewName);
+							$oPdo->createSharedFile('principals/' . $iUserId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], false);
+						}
+					}
 					$oChildren = $oItem->getChildren();
 					foreach ($oChildren as $oChild)
 					{
