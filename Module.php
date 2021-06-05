@@ -81,13 +81,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Core::DeleteUser::after', array($this, 'onAfterDeleteUser'));
 
 		$this->subscribeEvent('Files::GetNonExistentFileName::after', array($this, 'onAfterGetNonExistentFileName'));
-
-		\Aurora\Modules\Core\Classes\User::extend(
-			self::GetName(),
-			[
-				'UsedSpace' => array('bigint', 0),
-			]
-		);
 	}
 
 	public function CheckAccess(&$UserId)
@@ -190,7 +183,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($oUser)
 		{
 			$iResult = $this->getManager()->getUserSpaceUsed($oUser->PublicId, [\Aurora\System\Enums\FileStorageType::Personal]);
-			$oUser->{self::GetName() . '::UsedSpace'} = $iResult;
+			$oUser->setExtendedProp(self::GetName() . '::UsedSpace', $iResult);
 			\Aurora\System\Managers\Eav::getInstance()->updateEntity($oUser);
 		}
 
@@ -710,7 +703,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 			if ($oUser)
 			{
-				$iSize = $oUser->{self::GetName() . '::UsedSpace'};
+				$iSize = isset($oUser->{self::GetName() . '::UsedSpace'}) ? $oUser->{self::GetName() . '::UsedSpace'} : 0;
 			}
 
 			$mResult = array(
