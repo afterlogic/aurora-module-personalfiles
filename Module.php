@@ -94,22 +94,22 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
 
-		if ($UserId === null && $oAuthenticatedUser instanceof \Aurora\Modules\Core\Classes\User)
+		if ($UserId === null && $oAuthenticatedUser instanceof \Aurora\Modules\Core\Models\User)
 		{
-			$UserId = $oAuthenticatedUser->EntityId;
+			$UserId = $oAuthenticatedUser->Id;
 		}
 		if (\is_string($UserId))
 		{
 			$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId($UserId);
-			if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+			if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 			{
-				$UserId = $oUser->EntityId;
+				$UserId = $oUser->Id;
 			}
 		}
 
 		if (isset($UserId))
 		{
-			$iUserRole = $oAuthenticatedUser instanceof \Aurora\Modules\Core\Classes\User ? $oAuthenticatedUser->Role : \Aurora\System\Enums\UserRole::Anonymous;
+			$iUserRole = $oAuthenticatedUser instanceof \Aurora\Modules\Core\Models\User ? $oAuthenticatedUser->Role : \Aurora\System\Enums\UserRole::Anonymous;
 			switch ($iUserRole)
 			{
 				case (\Aurora\System\Enums\UserRole::SuperAdmin):
@@ -119,7 +119,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				case (\Aurora\System\Enums\UserRole::TenantAdmin):
 					// everything is allowed for TenantAdmin
 					$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUser($UserId);
-					if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+					if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 					{
 						if ($oAuthenticatedUser->IdTenant === $oUser->IdTenant)
 						{
@@ -129,7 +129,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					break;
 				case (\Aurora\System\Enums\UserRole::NormalUser):
 					// User identifier shoud be checked
-					if ($UserId === $oAuthenticatedUser->EntityId)
+					if ($UserId === $oAuthenticatedUser->Id)
 					{
 						$bAccessDenied = false;
 					}
@@ -184,7 +184,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$iResult = $this->getManager()->getUserSpaceUsed($oUser->PublicId, [\Aurora\System\Enums\FileStorageType::Personal]);
 			$oUser->setExtendedProp(self::GetName() . '::UsedSpace', $iResult);
-			\Aurora\System\Managers\Eav::getInstance()->updateEntity($oUser);
+			$oUser->save();
 		}
 
 		return $iResult;
