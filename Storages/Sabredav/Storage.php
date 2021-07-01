@@ -288,7 +288,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$sID = \Aurora\Modules\Min\Module::generateHashId([$sUserPublicId, $sType, $sPath, $sName]);
 
 		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId($sUserPublicId);
-		$iUserId = ($oUser instanceof \Aurora\Modules\Core\Classes\User) ? $oUser->EntityId : null;
+		$iUserId = ($oUser instanceof \Aurora\Modules\Core\Models\User) ? $oUser->Id : null;
 
 		$oMin = \Aurora\Modules\Min\Module::getInstance();
 		$mMin = $oMin->GetMinByID($sID);
@@ -791,7 +791,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	}
 
 	/**
-	 * @param \Aurora\Modules\StandardAuth\Classes\Account $oAccount
+	 * @param \Aurora\Modules\StandardAuth\Models\Account $oAccount
 	 * @param int $iType
 	 * @param string $sPath
 	 * @param string $sFileName
