@@ -6,7 +6,7 @@
 		"afterlogic/aurora-framework": "~0.10.0",
 		"afterlogic/aurora-module-dav": "~0.9.0",
 		"afterlogic/aurora-module-files": "~0.9.0",
-		"afterlogic/dav": "~2.2.0"
+		"afterlogic/dav": "~3.0.0"
 	},
 	"extra": {
 		"installer-name": "PersonalFiles"
