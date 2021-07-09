@@ -791,7 +791,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	}
 
 	/**
-	 * @param \Aurora\Modules\StandardAuth\Models\Account $oAccount
+	 * @param \Aurora\Modules\StandardAuth\Models\StandardAuthAccount $oAccount
 	 * @param int $iType
 	 * @param string $sPath
 	 * @param string $sFileName
