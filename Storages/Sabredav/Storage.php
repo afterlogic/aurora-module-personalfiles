@@ -662,7 +662,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			{
 				if ($oItem instanceof \Afterlogic\DAV\FS\File)
 				{
-					$oToDirectory->createFile($sNewName, $oItem->get());
+					$oToDirectory->createFile($sNewName, $oItem->get(false));
 
 					$oItemNew = $oToDirectory->getChild($sNewName);
 
