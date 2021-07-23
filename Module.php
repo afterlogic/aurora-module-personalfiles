@@ -391,7 +391,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function onAfterDeleteUser($aArgs, $mResult)
 	{
-		if ($mResult && $this->oBeforeDeleteUser instanceof \Aurora\Modules\Core\Classes\User)
+		if ($mResult && $this->oBeforeDeleteUser instanceof \Aurora\Modules\Core\Models\User)
 		{
 			$this->getManager()->ClearFiles($this->oBeforeDeleteUser->PublicId);
 			$this->oBeforeDeleteUser = null;
