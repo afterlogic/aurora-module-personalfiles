@@ -81,6 +81,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Core::DeleteUser::after', array($this, 'onAfterDeleteUser'));
 
 		$this->subscribeEvent('Files::GetNonExistentFileName::after', array($this, 'onAfterGetNonExistentFileName'));
+
+		\Aurora\Modules\Core\Classes\User::extend(
+			self::GetName(),
+			[
+				'UsedSpace' => array('bigint', 0),
+			]
+		);
 	}
 
 	public function CheckAccess(&$UserId)
