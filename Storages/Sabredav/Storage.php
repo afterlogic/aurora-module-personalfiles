@@ -232,7 +232,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 			if ($bShared) {
 				$aExtendedProps = $oResult->ExtendedProps;
-				$aExtendedProps['Access'] = $oItem->getAccess();
+				$aExtendedProps['SharedWithMeAccess'] = $oItem->getAccess();
 				$oResult->ExtendedProps = $aExtendedProps;
 			}
 		}
