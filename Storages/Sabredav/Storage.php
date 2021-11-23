@@ -8,6 +8,8 @@
 
 namespace Aurora\Modules\PersonalFiles\Storages\Sabredav;
 
+use Aurora\System\Enums\FileStorageType;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -117,18 +119,20 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$oResult = null;
 		if ($oItem)
 		{
-			$sFilePath = isset($sPath) ? $sPath : $oItem->getRelativePath();
+			$bShared = ($oItem instanceof \Afterlogic\DAV\FS\Shared\File || $oItem instanceof \Afterlogic\DAV\FS\Shared\Directory);
+			
+			$sFilePath = isset($sPath) ? $sPath : ($bShared ? $oItem->getSharePath() : $oItem->getRelativePath());
 
 			$oResult /*@var $oResult \Aurora\Modules\Files\Classes\FileItem */ = new  \Aurora\Modules\Files\Classes\FileItem();
-
-			$oResult->Type = $sType;
-			$oResult->TypeStr = $sType;
+			$oResult->Type = $bShared ? 'shared' : $sType;
+			$oResult->TypeStr = $bShared ? 'shared' : $sType;
 			$oResult->RealPath = $oItem->getPath();
 			$oResult->Path = $sFilePath;
 			$oResult->Name = $oItem->getName();
 			$oResult->Id = $oItem->getId();
-			$oResult->FullPath = $oResult->Name !== '' ? $oResult->Path . '/' . $oResult->Id  : $oResult->Path;
+			$oResult->FullPath = $oResult->Name !== '' ? $oResult->Path . '/' . ltrim($oResult->Id, '/')  : $oResult->Path;
 			$oResult->ETag = ($oItem instanceof \Afterlogic\DAV\FS\File) ? \trim($oItem->getETag(), '"') : '';
+			$oResult->Shared = $bShared;
 			$sID = '';
 			if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
 			{
@@ -356,7 +360,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				{
 					if (isset($oDirectoryInfo['Link']) && strpos($oDirectoryInfo['Name'], $sPattern) !== false)
 					{
-						$aItems[] = new \Afterlogic\DAV\FS\File($oDirectory->getPath() . '/' . $oDirectoryInfo['@Name']);
+						$aItems[] = new \Afterlogic\DAV\FS\File($sType, $oDirectory->getPath() . '/' . $oDirectoryInfo['@Name']);
 					}
 				}
 			}

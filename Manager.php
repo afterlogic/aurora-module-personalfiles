@@ -7,6 +7,8 @@
 
 namespace Aurora\Modules\PersonalFiles;
 
+use Aurora\Modules\PersonalFiles\Storages\Sabredav\Storage;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -17,11 +19,16 @@ namespace Aurora\Modules\PersonalFiles;
 class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 {
 	/**
+	 * @var \Aurora\Modules\PersonalFiles\Storages\Sabredav\Storage
+	 */
+	public $oStorage;
+
+	/**
 	 * @param \Aurora\System\Module\AbstractModule $oModule
 	 */
 	public function __construct(\Aurora\System\Module\AbstractModule $oModule = null)
 	{
-		parent::__construct($oModule, new Storages\Sabredav\Storage($this));
+		parent::__construct($oModule, new Storage($this));
 	}
 
 	/**

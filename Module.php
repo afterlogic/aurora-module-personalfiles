@@ -59,7 +59,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$this->subscribeEvent('Files::GetStorages::after', array($this, 'onAfterGetStorages'));
 		$this->subscribeEvent('Files::GetFileInfo::after', array($this, 'onAfterGetFileInfo'), 10);
-		$this->subscribeEvent('Files::GetItems::after', array($this, 'onAfterGetItems'));
+		$this->subscribeEvent('Files::GetItems', array($this, 'onGetItems'));
 		$this->subscribeEvent('Files::CreateFolder::after', array($this, 'onAfterCreateFolder'));
 		$this->subscribeEvent('Files::Copy::after', array($this, 'onAfterCopy'));
 		$this->subscribeEvent('Files::Move::after', array($this, 'onAfterMove'));
@@ -436,7 +436,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $aArgs Arguments of event.
 	 * @param mixed $mResult Is passed by reference.
 	 */
-	public function onAfterGetItems($aArgs, &$mResult)
+	public function onGetItems($aArgs, &$mResult)
 	{
 		if ($this->checkStorageType($aArgs['Type']))
 		{
@@ -445,7 +445,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
 			$sHash = isset($aArgs['PublicHash']) ? $aArgs['PublicHash'] : null;
-			$mResult = $this->getManager()->getFiles($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Pattern'], $sHash);
+			$mResult = array_merge(
+				$mResult,
+				$this->getManager()->getFiles(
+					$sUserPiblicId, 
+					$aArgs['Type'], 
+					$aArgs['Path'], 
+					$aArgs['Pattern'], 
+					$sHash
+				)
+			);
 		}
 	}
 
