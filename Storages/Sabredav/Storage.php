@@ -229,6 +229,12 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			$oResult->Published = (isset($aProps['Published']) ? $aProps['Published'] : empty($mMin['__hash__'])) ? false : true;
 			$oResult->Owner = isset($aProps['Owner']) ? $aProps['Owner'] : basename($oItem->getOwner());
 			$oResult->ExtendedProps = isset($aProps['ExtendedProps']) ? $aProps['ExtendedProps'] : [];
+
+			if ($bShared) {
+				$aExtendedProps = $oResult->ExtendedProps;
+				$aExtendedProps['Access'] = $oItem->getAccess();
+				$oResult->ExtendedProps = $aExtendedProps;
+			}
 		}
 
 		return $oResult;
