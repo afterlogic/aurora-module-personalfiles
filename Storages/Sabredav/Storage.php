@@ -8,7 +8,8 @@
 
 namespace Aurora\Modules\PersonalFiles\Storages\Sabredav;
 
-use Aurora\System\Enums\FileStorageType;
+use Afterlogic\DAV\FS\Shared\File as SharedFile;
+use Afterlogic\DAV\FS\Shared\Directory as SharedDirectory;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -119,13 +120,13 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$oResult = null;
 		if ($oItem)
 		{
-			$bShared = ($oItem instanceof \Afterlogic\DAV\FS\Shared\File || $oItem instanceof \Afterlogic\DAV\FS\Shared\Directory);
+			$bShared = ($oItem instanceof SharedFile || $oItem instanceof SharedDirectory);
 			
 			$sFilePath = isset($sPath) ? $sPath : ($bShared ? $oItem->getSharePath() : $oItem->getRelativePath());
 
 			$oResult /*@var $oResult \Aurora\Modules\Files\Classes\FileItem */ = new  \Aurora\Modules\Files\Classes\FileItem();
-			$oResult->Type = $bShared ? 'shared' : $sType;
-			$oResult->TypeStr = $bShared ? 'shared' : $sType;
+			$oResult->Type = $sType;
+			$oResult->TypeStr = $sType;
 			$oResult->RealPath = $oItem->getPath();
 			$oResult->Path = $sFilePath;
 			$oResult->Name = $oItem->getName();
@@ -501,7 +502,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$oItem = $oServer->tree->getNodeForPath($sNodePath);
 		if ($oItem !== null)
 		{
-			if ($oItem instanceof \Sabre\DAVACL\IACL && !empty(trim($sPath, '/')))
+			$bShared = ($oItem instanceof SharedFile || $oItem instanceof SharedDirectory);
+			if ($oItem instanceof \Sabre\DAVACL\IACL && !empty(trim($sPath, '/')) && !$bShared)
 			{
 				$oServer = \Afterlogic\DAV\Server::getInstance();
 				$oAclPlugin = $oServer->getPlugin('acl');
@@ -593,7 +595,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		{
 			if ($oNode->getName() !== $sNewName)
 			{
-				if ($oNode instanceof \Sabre\DAVACL\IACL)
+				$bIsShared = ($oNode instanceof \Afterlogic\DAV\FS\Shared\File || $oNode instanceof \Afterlogic\DAV\FS\Shared\Directory);
+				if ($oNode instanceof \Sabre\DAVACL\IACL && !$bIsShared)
 				{
 					$oServer = \Afterlogic\DAV\Server::getInstance();
 					$oAclPlugin = $oServer->getPlugin('acl');
@@ -639,7 +642,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	}
 
 	/**
-	 * @param int $iUserId
+	 * @param int $sUserPublicId
 	 * @param string $sFromType
 	 * @param string $sToType
 	 * @param string $sFromPath
@@ -650,7 +653,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 *
 	 * @return bool
 	 */
-	public function copy($iUserId, $sFromType, $sToType, $sFromPath, $sToPath, $sName, $sNewName, $bMove = false)
+	public function copy($sUserPublicId, $sFromType, $sToType, $sFromPath, $sToPath, $sName, $sNewName, $bMove = false)
 	{
 		$oMin = \Aurora\Modules\Min\Module::getInstance();
 
@@ -659,115 +662,129 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			$sNewName = $sName;
 		}
 
-		$sFromRootPath = $this->getRootPath($iUserId, $sFromType, true);
-		$sToRootPath = $this->getRootPath($iUserId, $sToType, true);
+		$sFromRootPath = $this->getRootPath($sUserPublicId, $sFromType, true);
+		$sToRootPath = $this->getRootPath($sUserPublicId, $sToType, true);
 
-		$oFromDirectory = $this->getDirectory($iUserId, $sFromType, $sFromPath);
-		$oToDirectory = $this->getDirectory($iUserId, $sToType, $sToPath);
+		$oFromDirectory = $this->getDirectory($sUserPublicId, $sFromType, $sFromPath);
+		$oToDirectory = $this->getDirectory($sUserPublicId, $sToType, $sToPath);
 
 		if ($oToDirectory && $oFromDirectory)
 		{
-			$oItem = $oFromDirectory->getChild($sName);
+			$oItem = null;
+			try
+			{
+				$oItem = $oFromDirectory->getChild($sName);
+			}
+			catch (\Exception $oEx) {}
+
 			if ($oItem !== null)
 			{
-				if ($oItem instanceof \Afterlogic\DAV\FS\File)
+				if ($oItem instanceof SharedFile || $oItem instanceof SharedDirectory)
 				{
-					$oToDirectory->createFile($sNewName, $oItem->get());
-
-					$oItemNew = $oToDirectory->getChild($sNewName);
-
-					if ($oItemNew)
+					$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
+					$oPdo->updateSharedFileSharePath($oItem->getOwner(), $oItem->getName(), $sFromPath, $sToPath);
+				}
+				else
+				{
+					if ($oItem instanceof \Afterlogic\DAV\FS\File)
 					{
+						$oToDirectory->createFile($sNewName, $oItem->get());
+
+						$oItemNew = $oToDirectory->getChild($sNewName);
+
+						if ($oItemNew)
+						{
+							$oSharedFiles = \Aurora\Api::GetModule('SharedFiles');
+							if ($oSharedFiles)
+							{
+								$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
+								$aShares = $oPdo->getShares('principals/' . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName);
+								foreach ($aShares as $aShare)
+								{
+									$sNonExistentFileName = $oSharedFiles->getNonExistentFileName('principals/' . $sUserPublicId, $sNewName);
+									$oPdo->createSharedFile('principals/' . $sUserPublicId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], false);
+								}
+							}
+						}
+						$aProps = $oItem->getProperties(array());
+						if (!$bMove)
+						{
+							$aProps['Owner'] = $sUserPublicId;
+						}
+						else
+						{
+							$sChildPath = substr(dirname($oItem->getPath()), strlen($sFromRootPath));
+							$sID = \Aurora\Modules\Min\Module::generateHashId([$sUserPublicId, $sFromType, $sChildPath, $oItem->getName()]);
+
+							$sNewChildPath = substr(dirname($oItemNew->getPath()), strlen($sToRootPath));
+
+							$mMin = $oMin->GetMinByID($sID);
+							if (!empty($mMin['__hash__']))
+							{
+								$sNewID = \Aurora\Modules\Min\Module::generateHashId([$sUserPublicId, $sToType, $sNewChildPath, $oItemNew->getName()]);
+
+								$mMin['Path'] = $sNewChildPath;
+								$mMin['Type'] = $sToType;
+								$mMin['Name'] = $oItemNew->getName();
+
+								$oMin->UpdateMinByID($sID, $mMin, $sNewID);
+							}
+						}
+						$oItemNew->updateProperties($aProps);
+
+						if (!isset($GLOBALS['__SKIP_HISTORY__']))
+						{
+							try
+							{
+								$oHistoryNode = $oFromDirectory->getChild($sName . '.hist');
+								if ($oHistoryNode instanceof \Afterlogic\DAV\FS\Directory)
+								{
+									$this->copy($sUserPublicId, $sFromType, $sToType, $sFromPath, $sToPath, $sName . '.hist', $sNewName . '.hist', false);
+								}
+							}
+							catch (\Exception $oEx) {}
+						}
+					}
+					if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
+					{
+						$oToDirectory->createDirectory($sNewName);
+
 						$oSharedFiles = \Aurora\Api::GetModule('SharedFiles');
 						if ($oSharedFiles)
 						{
 							$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
-							$aShares = $oPdo->getShares('principals/' . $iUserId, $sFromType, $sFromPath . '/' . $sName);
+							$aShares = $oPdo->getShares('principals/' . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName);
 							foreach ($aShares as $aShare)
 							{
-								$sNonExistentFileName = $oSharedFiles->getNonExistentFileName('principals/' . $iUserId, $sNewName);
-								$oPdo->createSharedFile('principals/' . $iUserId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], false);
+								$sNonExistentFileName = $oSharedFiles->getNonExistentFileName('principals/' . $sUserPublicId, $sNewName);
+								$oPdo->createSharedFile('principals/' . $sUserPublicId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], false);
 							}
 						}
-					}
-					$aProps = $oItem->getProperties(array());
-					if (!$bMove)
-					{
-						$aProps['Owner'] = $iUserId;
-					}
-					else
-					{
-						$sChildPath = substr(dirname($oItem->getPath()), strlen($sFromRootPath));
-						$sID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $sFromType, $sChildPath, $oItem->getName()]);
-
-						$sNewChildPath = substr(dirname($oItemNew->getPath()), strlen($sToRootPath));
-
-						$mMin = $oMin->GetMinByID($sID);
-						if (!empty($mMin['__hash__']))
+						$oChildren = $oItem->getChildren();
+						foreach ($oChildren as $oChild)
 						{
-							$sNewID = \Aurora\Modules\Min\Module::generateHashId([$iUserId, $sToType, $sNewChildPath, $oItemNew->getName()]);
-
-							$mMin['Path'] = $sNewChildPath;
-							$mMin['Type'] = $sToType;
-							$mMin['Name'] = $oItemNew->getName();
-
-							$oMin->UpdateMinByID($sID, $mMin, $sNewID);
-						}
-					}
-					$oItemNew->updateProperties($aProps);
-
-					if (!isset($GLOBALS['__SKIP_HISTORY__']))
-					{
-						try
-						{
-							$oHistoryNode = $oFromDirectory->getChild($sName . '.hist');
-							if ($oHistoryNode instanceof \Afterlogic\DAV\FS\Directory)
-							{
-								$this->copy($iUserId, $sFromType, $sToType, $sFromPath, $sToPath, $sName . '.hist', $sNewName . '.hist', false);
-							}
-						}
-						catch (\Exception $oEx) {}
-					}
-				}
-				if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
-				{
-					$oToDirectory->createDirectory($sNewName);
-
-					$oSharedFiles = \Aurora\Api::GetModule('SharedFiles');
-					if ($oSharedFiles)
-					{
-						$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
-						$aShares = $oPdo->getShares('principals/' . $iUserId, $sFromType, $sFromPath . '/' . $sName);
-						foreach ($aShares as $aShare)
-						{
-							$sNonExistentFileName = $oSharedFiles->getNonExistentFileName('principals/' . $iUserId, $sNewName);
-							$oPdo->createSharedFile('principals/' . $iUserId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], false);
-						}
-					}
-					$oChildren = $oItem->getChildren();
-					foreach ($oChildren as $oChild)
-					{
-						$sChildNewName = $this->getNonExistentFileName(
-								$iUserId,
+							$sChildNewName = $this->getNonExistentFileName(
+								$sUserPublicId,
+									$sToType,
+									$sToPath . '/' . $sNewName,
+									$oChild->getName()
+							);
+							$this->copy(
+								$sUserPublicId,
+								$sFromType,
 								$sToType,
+								$sFromPath . '/' . $sName,
 								$sToPath . '/' . $sNewName,
-								$oChild->getName()
-						);
-						$this->copy(
-							$iUserId,
-							$sFromType,
-							$sToType,
-							$sFromPath . '/' . $sName,
-							$sToPath . '/' . $sNewName,
-							$oChild->getName(),
-							$sChildNewName,
-							$bMove
-						);
+								$oChild->getName(),
+								$sChildNewName,
+								$bMove
+							);
+						}
 					}
-				}
-				if ($bMove)
-				{
-					$oItem->delete();
+					if ($bMove)
+					{
+						$oItem->delete();
+					}
 				}
 				return true;
 			}
@@ -826,7 +843,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 		while ($this->isFileExists($oAccount, $iType, $sPath, $sFileName))
 		{
-			$sFileName = $sUploadNameWOExt.'_'.$iIndex.$sUploadNameExt;
+			$sFileName = $sUploadNameWOExt.' ('.$iIndex.')'.$sUploadNameExt;
 			$iIndex++;
 		}
 
