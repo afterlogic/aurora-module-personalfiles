@@ -385,7 +385,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 			foreach ($aItems as $oItem)
 			{
-				$aResult[] = $this->getFileInfo($iUserId, $sType, $oItem, $sPublicHash);
+				$aResult[] = $this->getFileInfo($iUserId, $sType, $oItem, $sPublicHash, $sPath);
 			}
 
 			usort($aResult,
