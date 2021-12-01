@@ -19,6 +19,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 	protected static $sStorageType = 'personal';
 	protected static $iStorageOrder = 0;
 
+	/**
+	 * Indicates if it's allowed to move files/folders to this storage.
+	 * @var type bool
+	 */
+	protected static $bIsDroppable = true;
+
 	protected $oBeforeDeleteUser = null;
 
 	/**
@@ -417,7 +423,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'DisplayName' => $this->i18N('LABEL_STORAGE'),
 			'IsExternal' => false,
 			'Order' => static::$iStorageOrder,
-			'IsDroppable' => true
+			'IsDroppable' => static::$bIsDroppable
 		]);
 	}
 
