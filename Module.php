@@ -451,6 +451,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
 			$sHash = isset($aArgs['PublicHash']) ? $aArgs['PublicHash'] : null;
+			$bIsShared = isset($aArgs['Shared']) ? !!$aArgs['Shared'] : false;
 			$mResult = array_merge(
 				$mResult,
 				$this->getManager()->getFiles(
@@ -458,7 +459,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 					$aArgs['Type'], 
 					$aArgs['Path'], 
 					$aArgs['Pattern'], 
-					$sHash
+					$sHash,
+					$bIsShared
 				)
 			);
 		}
@@ -601,7 +603,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
 			$sNewName = \trim(\MailSo\Base\Utils::ClearFileName($aArgs['NewName']));
 
-			$sNewName = $this->getManager()->getNonExistentFileName($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $sNewName);
+//			$sNewName = $this->getManager()->getNonExistentFileName($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $sNewName);
 			$mResult = $this->getManager()->rename($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Name'], $sNewName, $aArgs['IsLink']);
 		}
 	}
