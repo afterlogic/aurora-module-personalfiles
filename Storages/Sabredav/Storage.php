@@ -122,7 +122,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		{
 			$bShared = ($oItem instanceof SharedFile || $oItem instanceof SharedDirectory);
 			
-			$sFilePath = isset($sPath) ? $sPath : ($bShared ? $oItem->getSharePath() : $oItem->getRelativePath());
+			$sFilePath = !empty(trim($sPath, '/')) ? trim($sPath, '/') : ($bShared ? $oItem->getSharePath() : $oItem->getRelativePath());
 
 			$oResult /*@var $oResult \Aurora\Modules\Files\Classes\FileItem */ = new  \Aurora\Modules\Files\Classes\FileItem();
 			$oResult->Type = $sType;
@@ -131,7 +131,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			$oResult->Path = $sFilePath;
 			$oResult->Name = $oItem->getName();
 			$oResult->Id = $oItem->getId();
-			$oResult->FullPath = $oResult->Name !== '' ? $oResult->Path . '/' . ltrim($oResult->Id, '/')  : $oResult->Path;
+			$oResult->FullPath = !empty(trim($oResult->Path, '/')) ? $oResult->Path . '/' . ltrim($oResult->Id, '/')  : '/' . $oResult->Id;
 			$oResult->ETag = ($oItem instanceof \Afterlogic\DAV\FS\File) ? \trim($oItem->getETag(), '"') : '';
 			$oResult->Shared = $bShared;
 			$sID = '';
