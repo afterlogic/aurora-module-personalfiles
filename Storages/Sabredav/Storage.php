@@ -716,7 +716,10 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 								$aShares = $oPdo->getShares('principals/' . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName);
 								foreach ($aShares as $aShare)
 								{
-									$sNonExistentFileName = $oSharedFiles->getNonExistentFileName('principals/' . $sUserPublicId, $sNewName);
+									$sNonExistentFileName = $sNewName;
+									if ($sName !== $sNewName) {
+										$sNonExistentFileName = $oSharedFiles->getNonExistentFileName('principals/' . $sUserPublicId, $sNewName);
+									}
 									$oPdo->createSharedFile('principals/' . $sUserPublicId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], false, $aShare['share_path']);
 								}
 							}
@@ -773,7 +776,10 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 							$aShares = $oPdo->getShares('principals/' . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName);
 							foreach ($aShares as $aShare)
 							{
-								$sNonExistentFileName = $oSharedFiles->getNonExistentFileName('principals/' . $sUserPublicId, $sNewName);
+								$sNonExistentFileName = $sNewName;
+								if ($sName !== $sNewName) {
+									$sNonExistentFileName = $oSharedFiles->getNonExistentFileName('principals/' . $sUserPublicId, $sNewName);
+								}
 								$oPdo->createSharedFile('principals/' . $sUserPublicId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], false, $aShare['share_path']);
 							}
 						}
