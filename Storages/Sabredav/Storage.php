@@ -780,7 +780,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 								if ($sName !== $sNewName) {
 									$sNonExistentFileName = $oSharedFiles->getNonExistentFileName('principals/' . $sUserPublicId, $sNewName);
 								}
-								$oPdo->createSharedFile('principals/' . $sUserPublicId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], false, $aShare['share_path']);
+								$oPdo->createSharedFile('principals/' . $sUserPublicId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], true, $aShare['share_path']);
 							}
 						}
 						$oChildren = $oItem->getChildren();
