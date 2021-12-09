@@ -612,7 +612,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			if ($oNode->getName() !== $sNewName)
 			{
 				$bIsShared = ($oNode instanceof \Afterlogic\DAV\FS\Shared\File || $oNode instanceof \Afterlogic\DAV\FS\Shared\Directory);
-				if ($oNode instanceof \Sabre\DAVACL\IACL && !$bIsShared)
+				if ($oNode instanceof \Sabre\DAVACL\IACL/* && !$bIsShared*/)
 				{
 					\Afterlogic\DAV\Server::checkPrivileges('files/' . $sType . $sPath, '{DAV:}write');
 				}
@@ -693,7 +693,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 			if ($oItem !== null)
 			{
-				if ($oItem instanceof SharedFile || $oItem instanceof SharedDirectory)
+				if (($oItem instanceof SharedFile || $oItem instanceof SharedDirectory) && !$oItem->isInherited())
 				{
 					$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
 					$oPdo->updateSharedFileSharePath($oItem->getOwner(), $oItem->getName(), $sFromPath, $sToPath);
