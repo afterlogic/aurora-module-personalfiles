@@ -518,16 +518,12 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$oServer->setUser($iUserId);
 		$sNodePath = 'files/' . $sType . $sPath . '/' . $sName;
 		$oItem = $oServer->tree->getNodeForPath($sNodePath);
-		if ($oItem !== null)
-		{
-			$bShared = ($oItem instanceof SharedFile || $oItem instanceof SharedDirectory);
-			if ($oItem instanceof \Sabre\DAVACL\IACL && !empty(trim($sPath, '/')) && !$bShared)
-			{
+		if ($oItem !== null) {
+			if ($oItem instanceof \Sabre\DAVACL\IACL && !empty(trim($sPath, '/'))) {
 				\Afterlogic\DAV\Server::checkPrivileges('files/' . $sType . $sPath, '{DAV:}write');
 			}
 
-			if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
-			{
+			if ($oItem instanceof \Afterlogic\DAV\FS\Directory) {
 				$this->updateMin($iUserId, $sType, $sPath, $sName, $sName, $oItem, true);
 			}
 
@@ -611,8 +607,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		{
 			if ($oNode->getName() !== $sNewName)
 			{
-				$bIsShared = ($oNode instanceof \Afterlogic\DAV\FS\Shared\File || $oNode instanceof \Afterlogic\DAV\FS\Shared\Directory);
-				if ($oNode instanceof \Sabre\DAVACL\IACL/* && !$bIsShared*/)
+				if ($oNode instanceof \Sabre\DAVACL\IACL)
 				{
 					\Afterlogic\DAV\Server::checkPrivileges('files/' . $sType . $sPath, '{DAV:}write');
 				}
