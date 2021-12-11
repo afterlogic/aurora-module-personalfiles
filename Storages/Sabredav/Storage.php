@@ -845,7 +845,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 */
 	public function getNonExistentFileName($oAccount, $iType, $sPath, $sFileName)
 	{
-		$iIndex = 0;
+		$iIndex = 1;
 		$sFileNamePathInfo = pathinfo($sFileName);
 		$sUploadNameExt = '';
 		$sUploadNameWOExt = $sFileName;
