@@ -8,6 +8,7 @@
 
 namespace Aurora\Modules\PersonalFiles\Storages\Sabredav;
 
+use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\FS\Shared\File as SharedFile;
 use Afterlogic\DAV\FS\Shared\Directory as SharedDirectory;
 
@@ -707,16 +708,16 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 							if ($oSharedFiles)
 							{
 								$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
-//								$oPdo->updateSharedFileSharePathWithLike('principals/' . $sUserPublicId, $sFromPath, $sToPath);
-								$aShares = $oPdo->getShares('principals/' . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName);
-								foreach ($aShares as $aShare)
-								{
-									$sNonExistentFileName = $sNewName;
-									if ($sName !== $sNewName) {
-										$sNonExistentFileName = $oSharedFiles->getNonExistentFileName('principals/' . $sUserPublicId, $sNewName);
-									}
-									$oPdo->createSharedFile('principals/' . $sUserPublicId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], false, $aShare['share_path']);
-								}
+								$oPdo->updateShare(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName, $sToType, $sToPath . '/' . $sNewName);
+								// $aShares = $oPdo->getShares(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName);
+								// foreach ($aShares as $aShare)
+								// {
+								// 	$sNonExistentFileName = $sNewName;
+								// 	if ($sName !== $sNewName) {
+								// 		$sNonExistentFileName = $oSharedFiles->getNonExistentFileName(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sNewName);
+								// 	}
+								// 	$oPdo->createSharedFile(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], false, $aShare['share_path']);
+								// }
 							}
 						}
 						$aProps = $oItem->getProperties(array());
@@ -766,16 +767,16 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 						if ($oSharedFiles)
 						{
 							$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
-//							$oPdo->updateSharedFileSharePathWithLike('principals/' . $sUserPublicId, $sFromPath, $sToPath);
+//							$oPdo->updateSharedFileSharePathWithLike(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sFromPath, $sToPath);
 
-							$aShares = $oPdo->getShares('principals/' . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName);
+							$aShares = $oPdo->getShares(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName);
 							foreach ($aShares as $aShare)
 							{
 								$sNonExistentFileName = $sNewName;
 								if ($sName !== $sNewName) {
-									$sNonExistentFileName = $oSharedFiles->getNonExistentFileName('principals/' . $sUserPublicId, $sNewName);
+									$sNonExistentFileName = $oSharedFiles->getNonExistentFileName(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sNewName);
 								}
-								$oPdo->createSharedFile('principals/' . $sUserPublicId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], true, $aShare['share_path']);
+								$oPdo->createSharedFile(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], true, $aShare['share_path']);
 							}
 						}
 						$oChildren = $oItem->getChildren();
