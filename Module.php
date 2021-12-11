@@ -7,6 +7,10 @@
 
 namespace Aurora\Modules\PersonalFiles;
 
+use Aurora\Api;
+use Aurora\Modules\Core\Module as CoreModule;
+use Aurora\Modules\Files\Module as FilesModule;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -100,12 +104,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		$bAccessDenied = true;
 		
-		if (\Aurora\System\Api::accessCheckIsSkipped())
+		if (Api::accessCheckIsSkipped())
 		{
 			$bAccessDenied = false;
 		}
 
-		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
+		$oAuthenticatedUser = Api::getAuthenticatedUser();
 
 		if ($UserId === null && $oAuthenticatedUser instanceof \Aurora\Modules\Core\Models\User)
 		{
@@ -113,7 +117,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 		if (\is_string($UserId))
 		{
-			$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId($UserId);
+			$oUser = CoreModule::getInstance()->GetUserByPublicId($UserId);
 			if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 			{
 				$UserId = $oUser->Id;
@@ -131,7 +135,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					break;
 				case (\Aurora\System\Enums\UserRole::TenantAdmin):
 					// everything is allowed for TenantAdmin
-					$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUser($UserId);
+					$oUser = CoreModule::getInstance()->GetUser($UserId);
 					if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 					{
 						if ($oAuthenticatedUser->IdTenant === $oUser->IdTenant)
@@ -166,7 +170,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function GetSettings()
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::Anonymous);
+		Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::Anonymous);
 
 		return array(
 			'UserSpaceLimitMb' => $this->getUserSpaceLimitMb(),
@@ -181,17 +185,17 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function UpdateSettings($UserSpaceLimitMb)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::TenantAdmin);
+		Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::TenantAdmin);
 
-		\Aurora\Modules\Files\Module::getInstance()->setConfig('UserSpaceLimitMb', $UserSpaceLimitMb);
-		return (bool) \Aurora\Modules\Files\Module::getInstance()->saveModuleConfig();
+		FilesModule::getInstance()->setConfig('UserSpaceLimitMb', $UserSpaceLimitMb);
+		return (bool) FilesModule::getInstance()->saveModuleConfig();
 	}
 
 	public function UpdateUsedSpace()
 	{
 		$iResult = 0;
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		$oUser = Api::getAuthenticatedUser();
 
 		if ($oUser)
 		{
@@ -210,7 +214,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	*/
 	private function getMinModuleDecorator()
 	{
-		return \Aurora\System\Api::GetModuleDecorator('Min');
+		Api::GetModuleDecorator('Min');
 	}
 
 	/**
@@ -263,7 +267,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$UserId = $aArgs['UserId'];
 
-			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			$iOffset = isset($aArgs['Offset']) ? $aArgs['Offset'] : 0;
 			$iChunkSizet = isset($aArgs['ChunkSize']) ? $aArgs['ChunkSize'] : 0;
 
@@ -297,7 +301,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$this->CheckAccess($UserId);
 
 			$Result = $this->getManager()->createFile(
-				\Aurora\System\Api::getUserPublicIdById($UserId),
+				Api::getUserPublicIdById($UserId),
 				isset($aArgs['Type']) ? $aArgs['Type'] : null,
 				isset($aArgs['Path']) ? $aArgs['Path'] : null,
 				isset($aArgs['Name']) ? $aArgs['Name'] : null,
@@ -330,7 +334,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function onCheckUrl($aArgs, &$mResult)
 	{
-		$iUserId = \Aurora\System\Api::getAuthenticatedUserId();
+		$iUserId = Api::getAuthenticatedUserId();
 
 		if ($iUserId)
 		{
@@ -393,7 +397,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		if (isset($aArgs['UserId']))
 		{
-			$this->oBeforeDeleteUser = \Aurora\System\Api::getUserById($aArgs['UserId']);
+			$this->oBeforeDeleteUser = Api::getUserById($aArgs['UserId']);
 		}
 	}
 
@@ -449,7 +453,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$UserId = $aArgs['UserId'];
 			$this->CheckAccess($UserId);
 
-			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			$sHash = isset($aArgs['PublicHash']) ? $aArgs['PublicHash'] : null;
 			$bIsShared = isset($aArgs['Shared']) ? !!$aArgs['Shared'] : false;
 			$mResult = array_merge(
@@ -476,7 +480,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$UserId = $aArgs['UserId'];
 		$this->CheckAccess($UserId);
 
-		$sUUID = \Aurora\System\Api::getUserPublicIdById($UserId);
+		$sUUID = Api::getUserPublicIdById($UserId);
 		$Type = $aArgs['Type'];
 		$Path = $aArgs['Path'];
 		$Name = $aArgs['Name'];
@@ -500,7 +504,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$UserId = $aArgs['UserId'];
 			$this->CheckAccess($UserId);
 
-			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			$mResult = $this->getManager()->getFileInfo($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Id']);
 
 //			return true;
@@ -516,7 +520,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		$UserId = $aArgs['UserId'];
 		$this->CheckAccess($UserId);
-		$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+		$sUserPiblicId = Api::getUserPublicIdById($UserId);
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$mResult = $this->getManager()->createFolder($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['FolderName']);
@@ -531,7 +535,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function onAfterCreateLink($aArgs, &$mResult)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		if ($this->checkStorageType($aArgs['Type']))
 		{
@@ -548,7 +552,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$Link = substr($Link, 11);
 			}
 
-			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			if ($this->checkStorageType($Type))
 			{
 				$Name = \trim(\MailSo\Base\Utils::ClearFileName($Name));
@@ -567,7 +571,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		$UserId = $aArgs['UserId'];
 		$this->CheckAccess($UserId);
-		$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+		$sUserPiblicId = Api::getUserPublicIdById($UserId);
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$mResult = false;
@@ -600,7 +604,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$UserId = $aArgs['UserId'];
 			$this->CheckAccess($UserId);
 
-			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			$sNewName = \trim(\MailSo\Base\Utils::ClearFileName($aArgs['NewName']));
 
 //			$sNewName = $this->getManager()->getNonExistentFileName($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $sNewName);
@@ -619,7 +623,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$UserId = $aArgs['UserId'];
 		$this->CheckAccess($UserId);
 
-		$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+		$sUserPiblicId = Api::getUserPublicIdById($UserId);
 
 		if ($this->checkStorageType($aArgs['FromType']))
 		{
@@ -661,7 +665,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$UserId = $aArgs['UserId'];
 			$this->CheckAccess($UserId);
 
-			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			foreach ($aArgs['Files'] as $aItem)
 			{
 				$bFolderIntoItself = $aItem['IsFolder'] && $aArgs['ToPath'] === $aItem['FromPath'].'/'.$aItem['Name'];
@@ -692,10 +696,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 	protected function getUserSpaceLimitMb()
 	{
-		$iSpaceLimitMb = \Aurora\Modules\Files\Module::getInstance()->getConfig('UserSpaceLimitMb', 0);
+		$iSpaceLimitMb = FilesModule::getInstance()->getConfig('UserSpaceLimitMb', 0);
 
-		$iUserId = \Aurora\System\Api::getAuthenticatedUserId();
-		$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserUnchecked($iUserId);
+		$iUserId = Api::getAuthenticatedUserId();
+		$oUser = CoreModule::Decorator()->GetUserUnchecked($iUserId);
 
 		if ($oUser)
 		{
@@ -724,7 +728,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$iSize = 0;
 
-			$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserUnchecked($aArgs['UserId']);
+			$oUser = CoreModule::Decorator()->GetUserUnchecked($aArgs['UserId']);
 
 			if ($oUser)
 			{
@@ -757,8 +761,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 			$this->CheckAccess($UserId);
 
-			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+			Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			$bFolder = (bool) $IsFolder;
 			$mResult = $this->getManager()->createPublicLink($sUserPiblicId, $Type, $Path, $Name, $Size, $bFolder);
 			self::Decorator()->UpdateUsedSpace();
@@ -782,9 +786,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 			$this->CheckAccess($UserId);
 
-			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+			Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 
 			$mResult = $this->getManager()->deletePublicLink($sUserPiblicId, $Type, $Path, $Name);
 			self::Decorator()->UpdateUsedSpace();
@@ -804,7 +808,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$this->CheckAccess($UserId);
 
 			$mResult = $this->getManager()->isFileExists(
-				\Aurora\System\Api::getUserPublicIdById($UserId),
+				Api::getUserPublicIdById($UserId),
 				$aArgs['Type'],
 				$aArgs['Path'],
 				$aArgs['Name']
@@ -824,7 +828,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$sUserId = $aArgs['UserId'];
 			$iSize = $aArgs['Size'];
-			$aQuota = \Aurora\Modules\Files\Module::Decorator()->GetQuota($sUserId, $Type);
+			$aQuota = FilesModule::Decorator()->GetQuota($sUserId, $Type);
 			$mResult = !($aQuota['Limit'] > 0 && $aQuota['Used'] + $iSize > $aQuota['Limit']);
 			return true;
 		}
@@ -841,7 +845,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$UserId = $aArgs['UserId'];
 			$this->CheckAccess($UserId);
-			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			$mResult = $this->getManager()->updateExtendedProps(
 				$sUserPiblicId,
 				$aArgs['Type'],
@@ -863,7 +867,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$UserId = $aArgs['UserId'];
 			$this->CheckAccess($UserId);
-			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			$mResult = $this->getManager()->getExtendedProps(
 				$sUserPiblicId,
 				$aArgs['Type'],
@@ -879,7 +883,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$UserId = $aArgs['UserId'];
 			$this->CheckAccess($UserId);
-			$sUserPiblicId = \Aurora\System\Api::getUserPublicIdById($UserId);
+			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			$mResult = $this->getManager()->getNonExistentFileName(
 				$sUserPiblicId,
 				$aArgs['Type'],

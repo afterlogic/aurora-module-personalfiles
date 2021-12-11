@@ -814,7 +814,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 * Returns user used space in bytes for specified storages.
 	 *
 	 * @param int $iUserId User identifier.
-	 * @param string $aTypes Storage type list. Accepted values in array: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**.
+	 * @param array $aTypes Storage type list. Accepted values in array: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**.
 	 *
 	 * @return int;
 	 */
