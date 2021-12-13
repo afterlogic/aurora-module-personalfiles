@@ -702,22 +702,13 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 						$oItemNew = $oToDirectory->getChild($sNewName);
 
-						if ($oItemNew)
+						if ($oItemNew && $bMove)
 						{
 							$oSharedFiles = \Aurora\Api::GetModule('SharedFiles');
 							if ($oSharedFiles)
 							{
 								$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
 								$oPdo->updateShare(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName, $sToType, $sToPath . '/' . $sNewName);
-								// $aShares = $oPdo->getShares(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName);
-								// foreach ($aShares as $aShare)
-								// {
-								// 	$sNonExistentFileName = $sNewName;
-								// 	if ($sName !== $sNewName) {
-								// 		$sNonExistentFileName = $oSharedFiles->getNonExistentFileName(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sNewName);
-								// 	}
-								// 	$oPdo->createSharedFile(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], false, $aShare['share_path']);
-								// }
 							}
 						}
 						$aProps = $oItem->getProperties(array());
