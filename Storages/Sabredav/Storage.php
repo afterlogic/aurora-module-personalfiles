@@ -136,6 +136,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			$oResult->ETag = ($oItem instanceof \Afterlogic\DAV\FS\File) ? \trim($oItem->getETag(), '"') : '';
 			$oResult->Shared = $bShared;
 			$sID = '';
+			$aProps = [];
 			if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
 			{
 				$sID = \Aurora\Modules\Min\Module::generateHashId([$sUserPublicId, $sType, $sFilePath, $oItem->getName()]);
@@ -146,7 +147,6 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				]);
 			}
 
-			$aProps = [];
 			if ($oItem instanceof \Afterlogic\DAV\FS\File)
 			{
 				$aProps = $oItem->getProperties(
