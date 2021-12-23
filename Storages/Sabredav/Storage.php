@@ -382,9 +382,11 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 			foreach ($oIterator as $iKey => $oItem) {
 				// Skipping the parent path
-				if ($iKey === 0) continue;
+//				if ($iKey === 0) continue;
 
 				$sHref = $oItem['href'];
+				// Skipping the parent path
+				if ($sHref === $sPath) continue;
 				list(, $sName) = \Sabre\Uri\split($sHref);
 
 				if (empty($sPattern) || fnmatch("*" . $sPattern . "*", $sName, FNM_CASEFOLD)) {
