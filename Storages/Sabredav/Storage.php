@@ -77,7 +77,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		{
 			$oServer = \Afterlogic\DAV\Server::getInstance();
 			$oServer->setUser($sUserPublicId);
-			$oDirectory = $oServer->tree->getNodeForPath('files/' . $sType . '/' . \trim($sPath, '/') . '/');
+
+			$oDirectory = $oServer->tree->getNodeForPath('files/' . $sType . '/' . \trim($sPath, '/'));
 		}
 
 		return $oDirectory;
@@ -125,7 +126,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			
 			$sFilePath = !empty(trim($sPath, '/')) ? '/' . ltrim($sPath, '/') : ($bShared ? $oItem->getSharePath() : $oItem->getRelativePath());
 
-			$oResult /*@var $oResult \Aurora\Modules\Files\Classes\FileItem */ = new  \Aurora\Modules\Files\Classes\FileItem();
+			$oResult = new  \Aurora\Modules\Files\Classes\FileItem();
 			$oResult->Type = $sType;
 			$oResult->TypeStr = $sType;
 			$oResult->RealPath = $oItem->getPath();
