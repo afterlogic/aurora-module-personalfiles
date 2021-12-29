@@ -697,7 +697,9 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			{
 				$bIsSharedFile = ($oItem instanceof SharedFile || $oItem instanceof SharedDirectory);
 				$bIsSharedToDirectory = ($oToDirectory instanceof SharedDirectory);
-				$bMove = $bMove && $bIsSharedFile && !$bIsSharedToDirectory;
+				if ($bMove && $bIsSharedFile && $bIsSharedToDirectory) {
+					$bMove = false;
+				}
 				if ($bIsSharedFile && !$oItem->isInherited() && $bMove)
 				{
 					$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
