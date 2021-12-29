@@ -497,6 +497,9 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		if ($oDirectory instanceof \Sabre\DAVACL\IACL)
 		{
 			\Afterlogic\DAV\Server::checkPrivileges('files/' . $sType . $sPath, '{DAV:}write');
+			if ($oDirectory->childExists($sFileName)) {
+				\Afterlogic\DAV\Server::checkPrivileges('files/' . $sType . $sPath . '/' . $sFileName, '{DAV:}write');
+			}
 		}
 
 		if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory || $oDirectory instanceof \Afterlogic\DAV\FS\Shared\Root)
