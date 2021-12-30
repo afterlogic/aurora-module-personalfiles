@@ -11,6 +11,8 @@ namespace Aurora\Modules\PersonalFiles\Storages\Sabredav;
 use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\FS\Shared\File as SharedFile;
 use Afterlogic\DAV\FS\Shared\Directory as SharedDirectory;
+use Aurora\Modules\SharedFiles\Enums\ErrorCodes;
+use Aurora\System\Exceptions\ApiException;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -698,7 +700,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				$bIsSharedFile = ($oItem instanceof SharedFile || $oItem instanceof SharedDirectory);
 				$bIsSharedToDirectory = ($oToDirectory instanceof SharedDirectory);
 				if ($bMove && $bIsSharedFile && $bIsSharedToDirectory) {
-					$bMove = false;
+					throw new ApiException(ErrorCodes::NotPossibleToMoveSharedFileToSharedFolder);
 				}
 				if ($bIsSharedFile && !$oItem->isInherited() && $bMove)
 				{
