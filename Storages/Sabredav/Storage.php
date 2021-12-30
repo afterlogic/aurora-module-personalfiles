@@ -525,7 +525,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$oServer->setUser($iUserId);
 		$sNodePath = 'files/' . $sType . $sPath . '/' . $sName;
 		$oItem = $oServer->tree->getNodeForPath($sNodePath);
-		if ($oItem !== null) {
+		if ($oItem instanceof \Sabre\DAV\FS\Node) {
 			if ($oItem instanceof \Sabre\DAVACL\IACL && !empty(trim($sPath, '/'))) {
 				\Afterlogic\DAV\Server::checkPrivileges('files/' . $sType . $sPath, '{DAV:}write');
 			}
