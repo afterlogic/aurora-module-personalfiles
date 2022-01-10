@@ -705,6 +705,10 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				if ($bMove && $bIsSharedFile && $bIsSharedToDirectory) {
 					throw new ApiException(ErrorCodes::NotPossibleToMoveSharedFileToSharedFolder);
 				}
+				$aExtendedProps = $oItem->getProperty('ExtendedProps');
+				if (is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']) && $bIsSharedToDirectory) {
+					throw new ApiException(ErrorCodes::NotPossibleToMoveSharedFileToSharedFolder);
+				}
 				if ($bIsSharedFile && !$oItem->isInherited() && $bMove)
 				{
 					$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
