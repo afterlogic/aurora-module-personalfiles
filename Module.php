@@ -98,6 +98,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 				'UsedSpace' => array('bigint', 0),
 			]
 		);
+
+		$this->aErrors = [
+			Enums\ErrorCodes::NotFound	=> $this->i18N('INFO_NOTFOUND')
+		];
 	}
 
 	public function CheckAccess(&$UserId)

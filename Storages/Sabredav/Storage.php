@@ -11,6 +11,7 @@ namespace Aurora\Modules\PersonalFiles\Storages\Sabredav;
 use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\FS\Shared\File as SharedFile;
 use Afterlogic\DAV\FS\Shared\Directory as SharedDirectory;
+use Aurora\Modules\PersonalFiles\Enums\ErrorCodes as EnumsErrorCodes;
 use Aurora\Modules\SharedFiles\Enums\ErrorCodes;
 use Aurora\System\Exceptions\ApiException;
 
@@ -538,6 +539,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 			$oItem->delete();
 			return true;
+		} else {
+			throw new ApiException(EnumsErrorCodes::NotFound);
 		}
 
 		return false;
