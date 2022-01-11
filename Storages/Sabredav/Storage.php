@@ -11,6 +11,7 @@ namespace Aurora\Modules\PersonalFiles\Storages\Sabredav;
 use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\FS\Shared\File as SharedFile;
 use Afterlogic\DAV\FS\Shared\Directory as SharedDirectory;
+use Afterlogic\DAV\Server;
 use Aurora\Modules\Files\Enums\ErrorCodes as FilesErrorCodes;
 use Aurora\Modules\SharedFiles\Enums\ErrorCodes;
 use Aurora\System\Exceptions\ApiException;
@@ -314,6 +315,10 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		}
 		else
 		{
+			$oNode = Server::getNodeForPath('files/' . $sType . '/' . $sPath . '/' . $sName);
+			if ($oNode instanceof \Afterlogic\DAV\FS\Shared\File || $oNode instanceof \Afterlogic\DAV\FS\Shared\Directory) {
+				throw new ApiException(FilesErrorCodes::NotPermitted);
+			}
 			$mResult = $oMin->createMin(
 				$sID,
 				array(
