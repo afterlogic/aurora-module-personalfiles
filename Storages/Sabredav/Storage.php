@@ -423,6 +423,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 					return ($a->Name > $b->Name);
 				}
 			);
+		} else {
+			throw new ApiException(FilesErrorCodes::NotFound);
 		}
 
 		return $aResult;
