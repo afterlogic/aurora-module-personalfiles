@@ -15,6 +15,10 @@ use Afterlogic\DAV\Server;
 use Aurora\Modules\Files\Enums\ErrorCodes as FilesErrorCodes;
 use Aurora\Modules\SharedFiles\Enums\ErrorCodes;
 use Aurora\System\Exceptions\ApiException;
+use Exception;
+use Sabre\DAV\FS\Node;
+
+use function Sabre\Event\Loop\instance;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -634,6 +638,21 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				if (strlen($sNewName) < 200)
 				{
 					$this->updateMin($iUserId, $sType, $sPath, $sName, $sNewName, $oNode);
+					$oParentNode = $oServer->tree->getNodeForPath('files/' . $sType . $sPath);
+					$bChildExists = false;
+					if ($oParentNode) {
+						try {
+							$oChild = $oParentNode->getChild($sNewName);
+							$bChildExists = $oChild instanceof Node;
+						}
+						catch (Exception $oEx) {
+							$bChildExists = true;
+						}
+					}
+
+					if ($bChildExists) {
+						throw new ApiException(FilesErrorCodes::AlreadeExists);
+					}
 					$oNode->setName($sNewName);
 					return true;
 				}
