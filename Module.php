@@ -100,69 +100,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		);
 	}
 
-	public function CheckAccess(&$UserId)
-	{
-		$bAccessDenied = true;
-		
-		if (Api::accessCheckIsSkipped())
-		{
-			$bAccessDenied = false;
-		}
-
-		$oAuthenticatedUser = Api::getAuthenticatedUser();
-
-		if ($UserId === null && $oAuthenticatedUser instanceof \Aurora\Modules\Core\Models\User)
-		{
-			$UserId = $oAuthenticatedUser->Id;
-		}
-		if (\is_string($UserId))
-		{
-			$oUser = CoreModule::getInstance()->GetUserByPublicId($UserId);
-			if ($oUser instanceof \Aurora\Modules\Core\Models\User)
-			{
-				$UserId = $oUser->Id;
-			}
-		}
-
-		if (isset($UserId))
-		{
-			$iUserRole = $oAuthenticatedUser instanceof \Aurora\Modules\Core\Models\User ? $oAuthenticatedUser->Role : \Aurora\System\Enums\UserRole::Anonymous;
-			switch ($iUserRole)
-			{
-				case (\Aurora\System\Enums\UserRole::SuperAdmin):
-					// everything is allowed for SuperAdmin
-					$bAccessDenied = false;
-					break;
-				case (\Aurora\System\Enums\UserRole::TenantAdmin):
-					// everything is allowed for TenantAdmin
-					$oUser = CoreModule::getInstance()->GetUser($UserId);
-					if ($oUser instanceof \Aurora\Modules\Core\Models\User)
-					{
-						if ($oAuthenticatedUser->IdTenant === $oUser->IdTenant)
-						{
-							$bAccessDenied = false;
-						}
-					}
-					break;
-				case (\Aurora\System\Enums\UserRole::NormalUser):
-					// User identifier shoud be checked
-					if ($UserId === $oAuthenticatedUser->Id)
-					{
-						$bAccessDenied = false;
-					}
-					break;
-				case (\Aurora\System\Enums\UserRole::Customer):
-				case (\Aurora\System\Enums\UserRole::Anonymous):
-					// everything is forbidden for Customer and Anonymous users
-					break;
-			}
-			if ($bAccessDenied)
-			{
-				throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::AccessDenied);
-			}
-		}
-	}
-
 	/**
 	 * Obtains list of module settings.
 	 *
@@ -298,7 +235,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$UserId = $aArgs['UserId'];
-			$this->CheckAccess($UserId);
+			Api::CheckAccess($UserId);
 
 			$Result = $this->getManager()->createFile(
 				Api::getUserPublicIdById($UserId),
@@ -451,7 +388,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$UserId = $aArgs['UserId'];
-			$this->CheckAccess($UserId);
+			Api::CheckAccess($UserId);
 
 			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			$sHash = isset($aArgs['PublicHash']) ? $aArgs['PublicHash'] : null;
@@ -478,7 +415,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function onAfterGetFileContent($aArgs, &$mResult)
 	{
 		$UserId = $aArgs['UserId'];
-		$this->CheckAccess($UserId);
+		Api::CheckAccess($UserId);
 
 		$sUUID = Api::getUserPublicIdById($UserId);
 		$Type = $aArgs['Type'];
@@ -502,7 +439,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$UserId = $aArgs['UserId'];
-			$this->CheckAccess($UserId);
+			Api::CheckAccess($UserId);
 
 			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			$mResult = $this->getManager()->getFileInfo($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Id']);
@@ -519,7 +456,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function onAfterCreateFolder(&$aArgs, &$mResult)
 	{
 		$UserId = $aArgs['UserId'];
-		$this->CheckAccess($UserId);
+		Api::CheckAccess($UserId);
 		$sUserPiblicId = Api::getUserPublicIdById($UserId);
 		if ($this->checkStorageType($aArgs['Type']))
 		{
@@ -545,7 +482,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$Name = $aArgs['Name'];
 			$Link = $aArgs['Link'];
 
-			$this->CheckAccess($UserId);
+			Api::CheckAccess($UserId);
 
 			if (substr($Link, 0, 11) === 'javascript:')
 			{
@@ -570,7 +507,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function onAfterDelete(&$aArgs, &$mResult)
 	{
 		$UserId = $aArgs['UserId'];
-		$this->CheckAccess($UserId);
+		Api::CheckAccess($UserId);
 		$sUserPiblicId = Api::getUserPublicIdById($UserId);
 		if ($this->checkStorageType($aArgs['Type']))
 		{
@@ -602,7 +539,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$UserId = $aArgs['UserId'];
-			$this->CheckAccess($UserId);
+			Api::CheckAccess($UserId);
 
 			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			$sNewName = \trim(\MailSo\Base\Utils::ClearFileName($aArgs['NewName']));
@@ -621,7 +558,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function onAfterCopy(&$aArgs, &$mResult)
 	{
 		$UserId = $aArgs['UserId'];
-		$this->CheckAccess($UserId);
+		Api::CheckAccess($UserId);
 
 		$sUserPiblicId = Api::getUserPublicIdById($UserId);
 
@@ -663,7 +600,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($this->checkStorageType($aArgs['FromType']))
 		{
 			$UserId = $aArgs['UserId'];
-			$this->CheckAccess($UserId);
+			Api::CheckAccess($UserId);
 
 			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			foreach ($aArgs['Files'] as $aItem)
@@ -759,7 +696,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$Size = $aArgs['Size'];
 			$IsFolder = $aArgs['IsFolder'];
 
-			$this->CheckAccess($UserId);
+			Api::CheckAccess($UserId);
 
 			Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 			$sUserPiblicId = Api::getUserPublicIdById($UserId);
@@ -784,7 +721,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$Path = $aArgs['Path'];
 			$Name = $aArgs['Name'];
 
-			$this->CheckAccess($UserId);
+			Api::CheckAccess($UserId);
 
 			Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
@@ -805,7 +742,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if (isset($aArgs['Type']) && $this->checkStorageType($aArgs['Type']))
 		{
 			$UserId = $aArgs['UserId'];
-			$this->CheckAccess($UserId);
+			Api::CheckAccess($UserId);
 
 			$mResult = $this->getManager()->isFileExists(
 				Api::getUserPublicIdById($UserId),
@@ -844,7 +781,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$UserId = $aArgs['UserId'];
-			$this->CheckAccess($UserId);
+			Api::CheckAccess($UserId);
 			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			$mResult = $this->getManager()->updateExtendedProps(
 				$sUserPiblicId,
@@ -866,7 +803,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$UserId = $aArgs['UserId'];
-			$this->CheckAccess($UserId);
+			Api::CheckAccess($UserId);
 			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			$mResult = $this->getManager()->getExtendedProps(
 				$sUserPiblicId,
@@ -882,7 +819,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$UserId = $aArgs['UserId'];
-			$this->CheckAccess($UserId);
+			Api::CheckAccess($UserId);
 			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			$mResult = $this->getManager()->getNonExistentFileName(
 				$sUserPiblicId,
