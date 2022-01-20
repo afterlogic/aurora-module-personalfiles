@@ -92,6 +92,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$this->subscribeEvent('Files::GetNonExistentFileName::after', array($this, 'onAfterGetNonExistentFileName'));
 
+		$this->subscribeEvent('Files::GetAccessInfoForPath::after', array($this, 'onAfterGetAccessInfoForPath'));
+
 		\Aurora\Modules\Core\Classes\User::extend(
 			self::GetName(),
 			[
@@ -827,6 +829,33 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$aArgs['Path'],
 				$aArgs['Name']
 			);
+		}
+	}
+
+	public function onAfterGetAccessInfoForPath(&$aArgs, &$mResult)
+	{
+		if ($this->checkStorageType($aArgs['Type']))
+		{
+			$UserId = $aArgs['UserId'];
+			Api::CheckAccess($UserId);
+			$sUserPiblicId = Api::getUserPublicIdById($UserId);
+
+			$oServer = \Afterlogic\DAV\Server::getInstance();
+			$oServer->setUser($sUserPiblicId);
+			
+			$aItems = [];
+			$sPath = $aArgs['Path'];
+			$aPaths = explode('/', $sPath);
+			do  {
+				$oNode = $oServer->tree->getNodeForPath('files/' . $aArgs['Type'] . '/' . $sPath);
+				if ($oNode) {
+					$aItems[$sPath] = $oNode->getAccess();
+				}
+				array_pop($aPaths);
+				$sPath = implode('/', $aPaths);
+
+			} while (count($aPaths) > 0);
+			$mResult = $aItems;
 		}
 	}
 }
