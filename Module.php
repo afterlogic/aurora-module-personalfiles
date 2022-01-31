@@ -675,7 +675,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 
 			$mResult = array(
-				'Used' => $iSize,
+				'Used' => (int) $iSize,
 				'Limit' => $this->getUserSpaceLimitMb() * 1024 * 1024
 			);
 		}
@@ -766,9 +766,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($this->checkStorageType($Type))
 		{
 			$sUserId = $aArgs['UserId'];
-			$iSize = $aArgs['Size'];
+			$iSize = (int) $aArgs['Size'];
 			$aQuota = FilesModule::Decorator()->GetQuota($sUserId, $Type);
-			$mResult = !($aQuota['Limit'] > 0 && $aQuota['Used'] + $iSize > $aQuota['Limit']);
+			$Limit = (int) $aQuota['Limit'];
+			$Used = (int) $aQuota['Used'];
+			$mResult = !($Limit > 0 && $Used + $iSize > $Limit);
 			return true;
 		}
 	}
