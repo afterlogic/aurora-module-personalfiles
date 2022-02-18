@@ -458,8 +458,12 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 		if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory)
 		{
-			$oDirectory->createDirectory($sFolderName);
-			return true;
+			if (!$oDirectory->childExists($sFolderName)) {
+				$oDirectory->createDirectory($sFolderName);
+				return true;
+			} else {
+				throw new ApiException(FilesErrorCodes::AlreadeExists);
+			}
 		}
 
 		return false;
