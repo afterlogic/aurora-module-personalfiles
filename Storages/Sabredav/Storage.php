@@ -643,14 +643,14 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				{
 					$this->updateMin($iUserId, $sType, $sPath, $sName, $sNewName, $oNode);
 					$oParentNode = $oServer->tree->getNodeForPath('files/' . $sType . $sPath);
-					$bChildExists = false;
+					$bChildExists = true;
 					if ($oParentNode) {
 						try {
 							$oChild = $oParentNode->getChild($sNewName);
 							$bChildExists = $oChild instanceof Node;
 						}
 						catch (Exception $oEx) {
-							$bChildExists = true;
+							$bChildExists = false;
 						}
 					}
 
