@@ -144,6 +144,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			$oResult->FullPath = !empty(trim($oResult->Path, '/')) ? $oResult->Path . '/' . ltrim($oResult->Id, '/')  : '/' . $oResult->Id;
 			$oResult->ETag = ($oItem instanceof \Afterlogic\DAV\FS\File) ? \trim($oItem->getETag(), '"') : '';
 			$oResult->Shared = $bShared;
+			$oResult->GroupId = $bShared ? $oItem->getGroupId() : null;
+
 			$sID = '';
 			$aProps = [];
 			if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
