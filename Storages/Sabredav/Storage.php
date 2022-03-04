@@ -744,7 +744,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				if ($bIsSharedFile && !$oItem->isInherited() && $bMove)
 				{
 					$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
-					$oPdo->updateSharedFileSharePath(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $oItem->getName(), $sFromPath, $sToPath);
+					$oPdo->updateSharedFileSharePath(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $oItem->getName(), $sFromPath, $sToPath, $oItem->getGroupId());
 				}
 				else
 				{
@@ -819,7 +819,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 								if ($sName !== $sNewName) {
 									$sNonExistentFileName = $oSharedFiles->getNonExistentFileName(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sNewName);
 								}
-								$oPdo->createSharedFile(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], true, $aShare['share_path']);
+								$oPdo->createSharedFile(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], true, $aShare['share_path'], $aShare['group_id']);
 							}
 						}
 						$oChildren = $oItem->getChildren();
