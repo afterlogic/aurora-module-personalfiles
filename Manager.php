@@ -341,9 +341,9 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 	 *
 	 * @return string
 	 */
-	public function getNonExistentFileName($iUserId, $iType, $sPath, $sFileName)
+	public function getNonExistentFileName($iUserId, $iType, $sPath, $sFileName, $bWithoutGroup = false)
 	{
-		return $this->oStorage->getNonExistentFileName($iUserId, $iType, $sPath, $sFileName);
+		return $this->oStorage->getNonExistentFileName($iUserId, $iType, $sPath, $sFileName, $bWithoutGroup);
 	}
 
 	/**

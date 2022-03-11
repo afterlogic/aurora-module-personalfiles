@@ -100,7 +100,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 *
 	 * @return bool
 	 */
-	public function isFileExists($iUserId, $sType, $sPath, $sName)
+	public function isFileExists($iUserId, $sType, $sPath, $sName, $bWithoutGroup = false)
 	{
 		$bResult = false;
 		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
@@ -109,7 +109,11 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			$oItem = $oDirectory->getChild($sName);
 			if ($oItem instanceof \Sabre\DAV\FS\Node)
 			{
-				$bResult = true;
+				if ($bWithoutGroup && 
+					($oItem instanceof SharedFile || $oItem instanceof SharedDirectory) && $oItem->getGroup() == 0) {
+				} else {
+					$bResult = true;
+				}
 			}
 		}
 
@@ -887,7 +891,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 *
 	 * @return string
 	 */
-	public function getNonExistentFileName($oAccount, $iType, $sPath, $sFileName)
+	public function getNonExistentFileName($oAccount, $iType, $sPath, $sFileName, $bWithoutGroup = false)
 	{
 		$iIndex = 1;
 		$sFileNamePathInfo = pathinfo($sFileName);
@@ -903,7 +907,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			$sUploadNameWOExt = $sFileNamePathInfo['filename'];
 		}
 
-		while ($this->isFileExists($oAccount, $iType, $sPath, $sFileName))
+		while ($this->isFileExists($oAccount, $iType, $sPath, $sFileName, $bWithoutGroup))
 		{
 			$sFileName = $sUploadNameWOExt.' ('.$iIndex.')'.$sUploadNameExt;
 			$iIndex++;

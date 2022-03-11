@@ -829,7 +829,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$sUserPiblicId,
 				$aArgs['Type'],
 				$aArgs['Path'],
-				$aArgs['Name']
+				$aArgs['Name'],
+				$aArgs['WithoutGroup']
 			);
 		}
 	}
