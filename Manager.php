@@ -7,7 +7,9 @@
 
 namespace Aurora\Modules\PersonalFiles;
 
+use Aurora\Api;
 use Aurora\Modules\PersonalFiles\Storages\Sabredav\Storage;
+use Aurora\System\EventEmitter;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -405,16 +407,24 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 	 */
 	public function getExtendedProps($sUserPublicId, $sType, $sPath, $sName)
 	{
-		$bResult = false;
+		$aResult = [];
 
 		$oServer = \Afterlogic\DAV\Server::getInstance();
 		$oServer->setUser($sUserPublicId);
 		$oItem = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName);
-		if ($oItem instanceof \Afterlogic\DAV\FS\File)
-		{
-			$bResult = $oItem->getProperty('ExtendedProps');
+		if ($oItem instanceof \Afterlogic\DAV\FS\File) {
+			$aResult = $oItem->getProperty('ExtendedProps');
 		}
 
-		return $bResult;
+		$aArgs = [
+			'UserId' => Api::getUserIdByPublicId($sUserPublicId),
+			'Type' => $sType,
+			'Path' => $sPath,
+			'Name' => $sName,
+			'Item' => $oItem
+		];
+		EventEmitter::getInstance()->emit('Files', 'PopulateExtendedProps', $aArgs, $aResult);
+
+		return $aResult;
 	}
 }
