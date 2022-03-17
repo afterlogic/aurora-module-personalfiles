@@ -804,7 +804,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function onAfterGetExtendedProps(&$aArgs, &$mResult)
 	{
-		if ($this->checkStorageType($aArgs['Type']))
+		$bCorrectArgs = isset($aArgs['Type']) && isset($aArgs['Path']) && isset($aArgs['Name']);
+		if ($bCorrectArgs && $this->checkStorageType($aArgs['Type']))
 		{
 			$UserId = $aArgs['UserId'];
 			Api::CheckAccess($UserId);
