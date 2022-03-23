@@ -251,6 +251,11 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				$aExtendedProps = $oResult->ExtendedProps;
 				$aExtendedProps['SharedWithMeAccess'] = $oItem->getAccess();
 				$oResult->ExtendedProps = $aExtendedProps;
+
+				$sInitiator = $oItem->getInitiator();
+				if (!empty($sInitiator)) {
+					$oResult->Owner = basename($sInitiator);
+				}
 			}
 		}
 
@@ -823,7 +828,18 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 								if ($sName !== $sNewName) {
 									$sNonExistentFileName = $oSharedFiles->getNonExistentFileName(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sNewName);
 								}
-								$oPdo->createSharedFile(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sToType, $sToPath . '/' . $sNewName, $sNonExistentFileName, $aShare['principaluri'], $aShare['access'], true, $aShare['share_path'], $aShare['group_id']);
+								$oPdo->createSharedFile(
+									Constants::PRINCIPALS_PREFIX . $sUserPublicId, 
+									$sToType, 
+									$sToPath . '/' . $sNewName, 
+									$sNonExistentFileName, 
+									$aShare['principaluri'], 
+									$aShare['access'], 
+									true, 
+									$aShare['share_path'], 
+									$aShare['group_id'],
+									Constants::PRINCIPALS_PREFIX . $sUserPublicId
+								);
 							}
 						}
 						$oChildren = $oItem->getChildren();
