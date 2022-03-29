@@ -149,6 +149,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 			$oResult->ETag = ($oItem instanceof \Afterlogic\DAV\FS\File) ? \trim($oItem->getETag(), '"') : '';
 			$oResult->Shared = $bShared;
 			$oResult->GroupId = $bShared ? $oItem->getGroupId() : null;
+			$oResult->Initiator = $bShared ? basename($oItem->getInitiator()) : null;
 
 			$sID = '';
 			$aProps = [];
@@ -252,10 +253,10 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				$aExtendedProps['SharedWithMeAccess'] = $oItem->getAccess();
 				$oResult->ExtendedProps = $aExtendedProps;
 
-				$sInitiator = $oItem->getInitiator();
-				if (!empty($sInitiator)) {
-					$oResult->Owner = basename($sInitiator);
-				}
+				// $sInitiator = $oItem->getInitiator();
+				// if (!empty($sInitiator)) {
+				// 	$oResult->Owner = basename($sInitiator);
+				// }
 			}
 		}
 
