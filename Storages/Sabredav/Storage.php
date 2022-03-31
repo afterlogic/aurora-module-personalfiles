@@ -253,10 +253,10 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				$aExtendedProps['SharedWithMeAccess'] = $oItem->getAccess();
 				$oResult->ExtendedProps = $aExtendedProps;
 
-				// $sInitiator = $oItem->getInitiator();
-				// if (!empty($sInitiator)) {
-				// 	$oResult->Owner = basename($sInitiator);
-				// }
+				$oResult->ExtendedProps = array_merge(
+					$oResult->ExtendedProps,
+					$oItem->getDbProperties()
+				);
 			}
 		}
 
