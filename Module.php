@@ -29,7 +29,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	protected static $bIsDroppable = true;
 
-	protected $oBeforeDeleteUser = null;
+	protected $oBeforeDeleteUserRootPath = '';
 
 	/**
 	 *
@@ -336,7 +336,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		if (isset($aArgs['UserId']))
 		{
-			$this->oBeforeDeleteUser = Api::getUserById($aArgs['UserId']);
+			$oBeforeDeleteUser = Api::getUserById($aArgs['UserId']);
+			if ($oBeforeDeleteUser) {
+				$this->oBeforeDeleteUserRootPath = $this->getManager()->oStorage->getRootPath($oBeforeDeleteUser->PublicId, \Aurora\System\Enums\FileStorageType::Personal, true);
+			}
 		}
 	}
 
@@ -347,10 +350,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function onAfterDeleteUser($aArgs, $mResult)
 	{
-		if ($mResult && $this->oBeforeDeleteUser instanceof \Aurora\Modules\Core\Models\User)
-		{
-			$this->getManager()->ClearFiles($this->oBeforeDeleteUser->PublicId);
-			$this->oBeforeDeleteUser = null;
+		if ($mResult && !empty($this->oBeforeDeleteUserRootPath)) {
+			\Aurora\System\Utils::RecRmdir($this->oBeforeDeleteUserRootPath);
+			$this->oBeforeDeleteUserRootPath = '';
 		}
 	}
 

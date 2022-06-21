@@ -39,7 +39,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 *
 	 * @return string|null
 	 */
-	protected function getRootPath($sUserPublicId, $sType, $bUser = false)
+	public function getRootPath($sUserPublicId, $sType, $bUser = false)
 	{
 		$sRootPath = null;
 		if ($sUserPublicId)
