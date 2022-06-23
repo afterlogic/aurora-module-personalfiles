@@ -4,7 +4,7 @@
 		"bool"
 	],
 	"Disabled_Description": [
-		"",
+		"Setting to true disables the module",
 		"string"
 	],
 	"UserSpaceLimitMb": [
@@ -12,7 +12,7 @@
 		"int"
 	],
 	"UserSpaceLimitMb_Description": [
-		"",
+		"Defines a default filesystem quota for user account, in Mbytes",
 		"string"
 	]
 }
