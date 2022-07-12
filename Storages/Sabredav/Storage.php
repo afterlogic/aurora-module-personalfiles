@@ -720,8 +720,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	{
 		$oMin = \Aurora\Modules\Min\Module::getInstance();
 
-		if (empty($sNewName) && !is_numeric($sNewName))
-		{
+		if (empty($sNewName) && !is_numeric($sNewName)) {
 			$sNewName = $sName;
 		}
 
@@ -731,17 +730,13 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$oFromDirectory = $this->getDirectory($sUserPublicId, $sFromType, $sFromPath);
 		$oToDirectory = $this->getDirectory($sUserPublicId, $sToType, $sToPath);
 
-		if ($oToDirectory && $oFromDirectory)
-		{
+		if ($oToDirectory && $oFromDirectory) {
 			$oItem = null;
-			try
-			{
+			try {
 				$oItem = $oFromDirectory->getChild($sName);
-			}
-			catch (\Exception $oEx) {}
+			} catch (\Exception $oEx) {}
 
-			if ($oItem !== null)
-			{
+			if ($oItem !== null) {
 				$bIsSharedFile = ($oItem instanceof SharedFile || $oItem instanceof SharedDirectory);
 				$bIsSharedToDirectory = ($oToDirectory instanceof SharedDirectory);
 				if ($bMove && $bIsSharedFile && $bIsSharedToDirectory) {
@@ -751,43 +746,38 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				if (is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']) && $bIsSharedToDirectory) {
 					throw new ApiException(ErrorCodes::NotPossibleToMoveSharedFileToSharedFolder);
 				}
-				if ($bIsSharedFile && !$oItem->isInherited() && $bMove)
-				{
+				if ($bIsSharedFile && !$oItem->isInherited() && $bMove) {
 					$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
 					$oPdo->updateSharedFileSharePath(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $oItem->getName(), $sFromPath, $sToPath, $oItem->getGroupId());
 				}
-				else
-				{
-					if ($oItem instanceof \Afterlogic\DAV\FS\File)
-					{
-						$oToDirectory->createFile($sNewName, $oItem->get());
+				else {
+					if ($oItem instanceof \Afterlogic\DAV\FS\File) {
+						$isS3File = ($oItem instanceof \Afterlogic\DAV\FS\S3\File);
+						$oToDirectory->createFile(
+							$sNewName, 
+							$isS3File ? $oItem->get(false) : $oItem->get()
+						);
 
 						$oItemNew = $oToDirectory->getChild($sNewName);
 
-						if ($oItemNew && $bMove)
-						{
+						if ($oItemNew && $bMove) {
 							$oSharedFiles = \Aurora\Api::GetModule('SharedFiles');
-							if ($oSharedFiles)
-							{
+							if ($oSharedFiles) {
 								$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
 								$oPdo->updateShare(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName, $sToType, $sToPath . '/' . $sNewName);
 							}
 						}
 						$aProps = $oItem->getProperties(array());
-						if (!$bMove)
-						{
+						if (!$bMove) {
 							$aProps['Owner'] = $sUserPublicId;
-						}
-						else
-						{
+						} else {
 							$sChildPath = substr(dirname($oItem->getPath()), strlen($sFromRootPath));
 							$sID = \Aurora\Modules\Min\Module::generateHashId([$sUserPublicId, $sFromType, $sChildPath, $oItem->getName()]);
 
 							$sNewChildPath = substr(dirname($oItemNew->getPath()), strlen($sToRootPath));
 
 							$mMin = $oMin->GetMinByID($sID);
-							if (!empty($mMin['__hash__']))
-							{
+							if (!empty($mMin['__hash__'])) {
 								$sNewID = \Aurora\Modules\Min\Module::generateHashId([$sUserPublicId, $sToType, $sNewChildPath, $oItemNew->getName()]);
 
 								$mMin['Path'] = $sNewChildPath;
@@ -799,21 +789,17 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 						}
 						$oItemNew->updateProperties($aProps);
 
-						if (!isset($GLOBALS['__SKIP_HISTORY__']))
-						{
-							try
-							{
+						if (!isset($GLOBALS['__SKIP_HISTORY__'])) {
+							try {
 								$oHistoryNode = $oFromDirectory->getChild($sName . '.hist');
-								if ($oHistoryNode instanceof \Afterlogic\DAV\FS\Directory)
-								{
+								if ($oHistoryNode instanceof \Afterlogic\DAV\FS\Directory) {
 									$this->copy($sUserPublicId, $sFromType, $sToType, $sFromPath, $sToPath, $sName . '.hist', $sNewName . '.hist', false);
 								}
 							}
 							catch (\Exception $oEx) {}
 						}
 					}
-					if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
-					{
+					if ($oItem instanceof \Afterlogic\DAV\FS\Directory) {
 						$oToDirectory->createDirectory($sNewName);
 
 						$oSharedFiles = \Aurora\Api::GetModule('SharedFiles');
