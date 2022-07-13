@@ -9,7 +9,9 @@ namespace Aurora\Modules\PersonalFiles;
 
 use Aurora\Api;
 use Aurora\Modules\Core\Module as CoreModule;
+use Aurora\Modules\Files\Enums\ErrorCodes;
 use Aurora\Modules\Files\Module as FilesModule;
+use Aurora\System\Exceptions\ApiException;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -609,8 +611,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$sUserPiblicId = Api::getUserPublicIdById($UserId);
 			foreach ($aArgs['Files'] as $aItem)
 			{
-				$bFolderIntoItself = $aItem['IsFolder'] && $aArgs['ToPath'] === $aItem['FromPath'].'/'.$aItem['Name'];
-				if (!$bFolderIntoItself)
+				$bIntoItself = $aArgs['ToType'].'/'.$aArgs['ToPath'] === $aItem['FromType'].'/'.$aItem['FromPath'];
+
+				if (!$bIntoItself)
 				{
 					$sNewName = isset($aItem['NewName']) ? $aItem['NewName'] : $aItem['Name'];
 					$mResult = $this->getManager()->copy(
@@ -628,6 +631,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 						),
 						true
 					);
+				} else {
+					throw new ApiException(ErrorCodes::CannotCopyOrMoveItemToItself);
 				}
 			}
 

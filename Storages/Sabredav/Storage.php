@@ -14,6 +14,7 @@ use Afterlogic\DAV\FS\Shared\Directory as SharedDirectory;
 use Afterlogic\DAV\Server;
 use Aurora\Modules\Files\Enums\ErrorCodes as FilesErrorCodes;
 use Aurora\Modules\SharedFiles\Enums\ErrorCodes;
+use Aurora\System\Enums\FileStorageType;
 use Aurora\System\Exceptions\ApiException;
 use Exception;
 use Sabre\DAV\FS\Node;
@@ -742,6 +743,9 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				if ($bMove && $bIsSharedFile && $bIsSharedToDirectory) {
 					throw new ApiException(ErrorCodes::NotPossibleToMoveSharedFileToSharedFolder);
 				}
+				if ($bMove && $bIsSharedFile && $sToType === FileStorageType::Corporate) {
+					throw new ApiException(\Aurora\Modules\Files\Enums\ErrorCodes::NotPossibleToMoveSharedFileToCorporateStorage);
+				}
 				$aExtendedProps = $oItem->getProperty('ExtendedProps');
 				if (is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']) && $bIsSharedToDirectory) {
 					throw new ApiException(ErrorCodes::NotPossibleToMoveSharedFileToSharedFolder);
@@ -752,10 +756,9 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				}
 				else {
 					if ($oItem instanceof \Afterlogic\DAV\FS\File) {
-						$isS3File = ($oItem instanceof \Afterlogic\DAV\FS\S3\File);
 						$oToDirectory->createFile(
 							$sNewName, 
-							$isS3File ? $oItem->get(false) : $oItem->get()
+							$oItem->get(false)
 						);
 
 						$oItemNew = $oToDirectory->getChild($sNewName);
