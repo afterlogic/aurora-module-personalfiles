@@ -32,7 +32,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	protected static $bIsDroppable = true;
 
 	protected $oBeforeDeleteUserRootPath = '';
-
+	protected $oBeforeDeleteUser = null;
 	/**
 	 *
 	 * @var \CApiFilesManager
@@ -338,9 +338,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		if (isset($aArgs['UserId']))
 		{
-			$oBeforeDeleteUser = Api::getUserById($aArgs['UserId']);
-			if ($oBeforeDeleteUser) {
-				$this->oBeforeDeleteUserRootPath = $this->getManager()->oStorage->getRootPath($oBeforeDeleteUser->PublicId, \Aurora\System\Enums\FileStorageType::Personal, true);
+			$this->oBeforeDeleteUser = Api::getUserById($aArgs['UserId']);
+			if ($this->oBeforeDeleteUser) {
+				$this->oBeforeDeleteUserRootPath = $this->getManager()->oStorage->getRootPath($this->oBeforeDeleteUser->PublicId, \Aurora\System\Enums\FileStorageType::Personal, true);
 			}
 		}
 	}
