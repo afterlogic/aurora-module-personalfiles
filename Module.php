@@ -7,8 +7,11 @@
 
 namespace Aurora\Modules\PersonalFiles;
 
+use Afterlogic\DAV\Constants;
+use Afterlogic\DAV\Server;
 use Aurora\Api;
 use Aurora\Modules\Core\Module as CoreModule;
+use Aurora\Modules\Files\Classes\FileItem;
 use Aurora\Modules\Files\Enums\ErrorCodes;
 use Aurora\Modules\Files\Module as FilesModule;
 use Aurora\System\Exceptions\ApiException;
@@ -514,21 +517,37 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		$UserId = $aArgs['UserId'];
 		Api::CheckAccess($UserId);
-		$sUserPiblicId = Api::getUserPublicIdById($UserId);
 		if ($this->checkStorageType($aArgs['Type']))
 		{
 			$mResult = false;
 
-			foreach ($aArgs['Items'] as $oItem)
+			foreach ($aArgs['Items']  as $aItem)
 			{
-				if (isset($oItem['Name']) && strlen(trim($oItem['Name'])) > 0)
-				{
-					$mResult = $this->getManager()->delete($sUserPiblicId, $aArgs['Type'], $oItem['Path'], $oItem['Name']);
-					if (!$mResult)
-					{
-						break;
+				try {
+					$oNode = Server::getNodeForPath(Constants::FILESTORAGE_PATH_ROOT . '/' . $aArgs['Type'] . '/' . $aItem['Path'] . '/' . $aItem['Name']);
+				} catch (\Exception $oEx) {
+					Api::LogException($oEx);
+					throw new ApiException(ErrorCodes::NotFound);
+				}
+	
+				if (!$oNode) {
+					throw new ApiException(ErrorCodes::NotFound);
+				}
+	
+				if ($oNode instanceof \Afterlogic\DAV\FS\Shared\File || $oNode instanceof \Afterlogic\DAV\FS\Shared\Directory) {
+					if (!$oNode->isInherited()) {
+						throw new ApiException(ErrorCodes::CantDeleteSharedItem);
 					}
 				}
+	
+				$oItem = new FileItem();
+				$oItem->Id = $aItem['Name'];
+				$oItem->Name = $aItem['Name'];
+				$oItem->TypeStr = $aArgs['Type'];
+				$oItem->Path = $aItem['Path'];
+	
+				self::Decorator()->DeletePublicLink($UserId, $aArgs['Type'], $aItem['Path'], $aItem['Name']);
+				\Aurora\System\Managers\Thumb::RemoveFromCache($UserId, $oItem->getHash(), $aItem['Name']);
 			}
 
 			self::Decorator()->UpdateUsedSpace();
