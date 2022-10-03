@@ -98,13 +98,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Files::GetNonExistentFileName::after', array($this, 'onAfterGetNonExistentFileName'));
 
 		$this->subscribeEvent('Files::GetAccessInfoForPath::after', array($this, 'onAfterGetAccessInfoForPath'));
-
-		\Aurora\Modules\Core\Classes\User::extend(
-			self::GetName(),
-			[
-				'UsedSpace' => array('bigint', 0),
-			]
-		);
 	}
 
 	/**
