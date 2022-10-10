@@ -532,6 +532,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 						throw new ApiException(ErrorCodes::CantDeleteSharedItem);
 					}
 				}
+
+				$oNode->delete();
 	
 				$oItem = new FileItem();
 				$oItem->Id = $aItem['Name'];
@@ -539,8 +541,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$oItem->TypeStr = $aArgs['Type'];
 				$oItem->Path = $aItem['Path'];
 	
-				self::Decorator()->DeletePublicLink($UserId, $aArgs['Type'], $aItem['Path'], $aItem['Name']);
+				FilesModule::Decorator()->DeletePublicLink($UserId, $aArgs['Type'], $aItem['Path'], $aItem['Name']);
 				\Aurora\System\Managers\Thumb::RemoveFromCache($UserId, $oItem->getHash(), $aItem['Name']);
+				
+				$mResult = true;
 			}
 
 			self::Decorator()->UpdateUsedSpace();
