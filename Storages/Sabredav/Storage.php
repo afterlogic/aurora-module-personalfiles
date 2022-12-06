@@ -84,10 +84,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 		if ($sUserPublicId)
 		{
-			$oServer = \Afterlogic\DAV\Server::getInstance();
-			$oServer->setUser($sUserPublicId);
-
-			$oDirectory = $oServer->tree->getNodeForPath('files/' . $sType . '/' . \trim($sPath, '/'));
+			$oDirectory = \Afterlogic\DAV\Server::getNodeForPath('files/' . $sType . '/' . \trim($sPath, '/'), $sUserPublicId);
 		}
 
 		return $oDirectory;
@@ -294,10 +291,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	public function getFile($iUserId, $sType, $sPath, $sName)
 	{
 		$sResult = null;
-		$oServer = \Afterlogic\DAV\Server::getInstance();
-		$oServer->setUser($iUserId);
-		$oNode = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName);
 
+		$oNode = \Afterlogic\DAV\Server::getNodeForPath('files/' . $sType . $sPath . '/' . $sName, $iUserId);
 
 		if ($oNode instanceof \Afterlogic\DAV\FS\File)
 		{
@@ -384,7 +379,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 		$oDirectory = $this->getDirectory($sUserPublicId, $sType, $sPath);
 
 		$oServer = \Afterlogic\DAV\Server::getInstance();
-		$oServer->setUser($sUserPublicId);
+		\Afterlogic\DAV\Server::setUser($sUserPublicId);
 
 		if ($oDirectory !== null && $oDirectory instanceof \Afterlogic\DAV\FS\Directory) {
 			$depth = 1;
@@ -416,7 +411,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				list(, $sName) = \Sabre\Uri\split($sHref);
 
 				if (empty($sPattern) || fnmatch("*" . $sPattern . "*", $sName, FNM_CASEFOLD)) {
-					$oNode = $oServer->tree->getNodeForPath($sHref);
+					$oNode = Server::getNodeForPath($sHref);
 
 					if ($oNode && !isset($aResult[$sHref])) {
 						$aHref = \explode('/', $sHref, 3);
@@ -446,7 +441,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				}
 			);
 		} else {
-			throw new ApiException(FilesErrorCodes::NotFound);
+			throw new ApiException(FilesErrorCodes::NotFound, null, "File not found");
 		}
 
 		return $aResult;
@@ -552,10 +547,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 */
 	public function delete($iUserId, $sType, $sPath, $sName)
 	{
-		$oServer = \Afterlogic\DAV\Server::getInstance();
-		$oServer->setUser($iUserId);
 		$sNodePath = 'files/' . $sType . $sPath . '/' . $sName;
-		$oItem = $oServer->tree->getNodeForPath($sNodePath);
+		$oItem = \Afterlogic\DAV\Server::getNodeForPath($sNodePath, $iUserId);
 		if ($oItem instanceof \Sabre\DAV\FS\Node) {
 			if ($oItem instanceof \Sabre\DAVACL\IACL && !empty(trim($sPath, '/'))) {
 				\Afterlogic\DAV\Server::checkPrivileges('files/' . $sType . $sPath, '{DAV:}write');
@@ -640,9 +633,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	 */
 	public function rename($iUserId, $sType, $sPath, $sName, $sNewName)
 	{
-		$oServer = \Afterlogic\DAV\Server::getInstance();
-		$oServer->setUser($iUserId);
-		$oNode = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName );
+		$oNode = \Afterlogic\DAV\Server::getNodeForPath('files/' . $sType . $sPath . '/' . $sName, $iUserId);
 		if ($oNode)
 		{
 			if ($oNode->getName() !== $sNewName)
@@ -655,7 +646,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				if (strlen($sNewName) < 200)
 				{
 					$this->updateMin($iUserId, $sType, $sPath, $sName, $sNewName, $oNode);
-					$oParentNode = $oServer->tree->getNodeForPath('files/' . $sType . $sPath);
+					$oParentNode = \Afterlogic\DAV\Server::getNodeForPath('files/' . $sType . $sPath, $iUserId);
 					$bChildExists = true;
 					if ($oParentNode) {
 						try {

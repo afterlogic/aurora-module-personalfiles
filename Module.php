@@ -520,11 +520,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 					$oNode = Server::getNodeForPath(Constants::FILESTORAGE_PATH_ROOT . '/' . $aArgs['Type'] . '/' . $aItem['Path'] . '/' . $aItem['Name']);
 				} catch (\Exception $oEx) {
 					Api::LogException($oEx);
-					throw new ApiException(ErrorCodes::NotFound);
+					throw new ApiException(ErrorCodes::NotFound, $oEx, "Node not found");
 				}
 	
 				if (!$oNode) {
-					throw new ApiException(ErrorCodes::NotFound);
+					throw new ApiException(ErrorCodes::NotFound, null, "Node not found");
 				}
 	
 				if ($oNode instanceof \Afterlogic\DAV\FS\Shared\File || $oNode instanceof \Afterlogic\DAV\FS\Shared\Directory) {
@@ -866,15 +866,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$UserId = $aArgs['UserId'];
 			Api::CheckAccess($UserId);
 			$sUserPiblicId = Api::getUserPublicIdById($UserId);
-
-			$oServer = \Afterlogic\DAV\Server::getInstance();
-			$oServer->setUser($sUserPiblicId);
 			
 			$aItems = [];
 			$sPath = $aArgs['Path'];
 			$aPaths = explode('/', $sPath);
 			do  {
-				$oNode = $oServer->tree->getNodeForPath('files/' . $aArgs['Type'] . '/' . $sPath);
+				$oNode = Server::getNodeForPath('files/' . $aArgs['Type'] . '/' . $sPath, $sUserPiblicId);
 				if ($oNode) {
 					$aItems[$sPath] = $oNode->getAccess();
 				}

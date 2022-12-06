@@ -78,11 +78,9 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 	{
 		$oResult = null;
 
-		$oServer = \Afterlogic\DAV\Server::getInstance();
-		$oServer->setUser($iUserId);
-		$oItem = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName);
+		$oItem = \Afterlogic\DAV\Server::getNodeForPath('files/' . $sType . $sPath . '/' . $sName, $iUserId);
 
-		if ($oItem !== null)
+		if ($oItem)
 		{
 			$oResult = $this->oStorage->getFileInfo($iUserId, $sType, $oItem, null, $sPath);
 		}
@@ -371,9 +369,7 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 	{
 		$bResult = false;
 
-		$oServer = \Afterlogic\DAV\Server::getInstance();
-		$oServer->setUser($sUserPublicId);
-		$oItem = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName);
+		$oItem = \Afterlogic\DAV\Server::getNodeForPath('files/' . $sType . $sPath . '/' . $sName, $sUserPublicId);
 		if ($oItem instanceof \Afterlogic\DAV\FS\File)
 		{
 			$aCurrentExtendedProps = $oItem->getProperty('ExtendedProps');
@@ -409,9 +405,7 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 	{
 		$aResult = [];
 
-		$oServer = \Afterlogic\DAV\Server::getInstance();
-		$oServer->setUser($sUserPublicId);
-		$oItem = $oServer->tree->getNodeForPath('files/' . $sType . $sPath . '/' . $sName);
+		$oItem = \Afterlogic\DAV\Server::getNodeForPath('files/' . $sType . $sPath . '/' . $sName, $sUserPublicId);
 		if ($oItem instanceof \Afterlogic\DAV\FS\File) {
 			$aResult = $oItem->getProperty('ExtendedProps');
 		}
