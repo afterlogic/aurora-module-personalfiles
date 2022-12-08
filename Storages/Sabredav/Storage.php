@@ -437,7 +437,10 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 			usort($aResult,
 				function ($a, $b) {
-					return ($a->Name > $b->Name);
+					if ($a->Name == $b->Name) {
+						return 0;
+					}
+					return ($a->Name < $b->Name) ? -1 : 1;
 				}
 			);
 		} else {
