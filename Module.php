@@ -237,6 +237,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$UserId = $aArgs['UserId'];
 			Api::CheckAccess($UserId);
 
+			$currentUser = Server::getUser();
+			Server::setUser(Api::getUserPublicIdById($UserId));
 			$Result = $this->getManager()->createFile(
 				Api::getUserPublicIdById($UserId),
 				isset($aArgs['Type']) ? $aArgs['Type'] : null,
@@ -248,6 +250,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				isset($aArgs['Offset']) ? $aArgs['Offset'] : null,
 				isset($aArgs['ExtendedProps']) ? $aArgs['ExtendedProps'] : null
 			);
+			Server::setUser($currentUser);
 
 			self::Decorator()->UpdateUsedSpace();
 			return true;
