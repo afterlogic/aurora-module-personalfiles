@@ -8,6 +8,8 @@
 namespace Aurora\Modules\PersonalFiles;
 
 use Afterlogic\DAV\Constants;
+use Afterlogic\DAV\FS\Directory;
+use Afterlogic\DAV\FS\File;
 use Afterlogic\DAV\Server;
 use Aurora\Api;
 use Aurora\Modules\Core\Module as CoreModule;
@@ -875,7 +877,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$aPaths = explode('/', $sPath);
 			do  {
 				$oNode = Server::getNodeForPath('files/' . $aArgs['Type'] . '/' . $sPath, $sUserPiblicId);
-				if ($oNode) {
+				if ($oNode instanceof File || $oNode instanceof Directory) {
 					$aItems[$sPath] = $oNode->getAccess();
 				}
 				array_pop($aPaths);

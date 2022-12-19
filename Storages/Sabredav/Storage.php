@@ -9,6 +9,8 @@
 namespace Aurora\Modules\PersonalFiles\Storages\Sabredav;
 
 use Afterlogic\DAV\Constants;
+use Afterlogic\DAV\FS\Directory;
+use Afterlogic\DAV\FS\File;
 use Afterlogic\DAV\FS\Shared\File as SharedFile;
 use Afterlogic\DAV\FS\Shared\Directory as SharedDirectory;
 use Afterlogic\DAV\Server;
@@ -502,7 +504,9 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				"[InternetShortcut]\r\nURL=\"" . $sLink . "\"\r\n"
 			);
 			$oItem = $oDirectory->getChild($sFileName);
-			$oItem->setProperty('Owner', $iUserId);
+if ($oItem instanceof File) {
+    $oItem->setProperty('Owner', $iUserId);
+}
 
 			return true;
 		}
@@ -523,7 +527,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 	{
 		$oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
 
-		if ($oDirectory instanceof \Sabre\DAVACL\IACL)
+		if ($oDirectory instanceof \Sabre\DAVACL\IACL && $oDirectory instanceof Directory)
 		{
 			\Afterlogic\DAV\Server::checkPrivileges('files/' . $sType . $sPath, '{DAV:}write');
 			if ($oDirectory->childExists($sFileName)) {
@@ -651,7 +655,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 					$this->updateMin($iUserId, $sType, $sPath, $sName, $sNewName, $oNode);
 					$oParentNode = \Afterlogic\DAV\Server::getNodeForPath('files/' . $sType . $sPath, $iUserId);
 					$bChildExists = true;
-					if ($oParentNode) {
+					if ($oParentNode instanceof Directory) {
 						try {
 							$oChild = $oParentNode->getChild($sNewName);
 							$bChildExists = $oChild instanceof Node;
@@ -800,7 +804,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 						$oToDirectory->createDirectory($sNewName);
 
 						$oSharedFiles = \Aurora\Api::GetModule('SharedFiles');
-						if ($oSharedFiles)
+						if ($oSharedFiles instanceof \Aurora\Modules\SharedFiles\Module)
 						{
 							$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
 //							$oPdo->updateSharedFileSharePathWithLike(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sFromPath, $sToPath);
