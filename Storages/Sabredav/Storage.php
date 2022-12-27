@@ -476,7 +476,9 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 				if (!$oDirectory->childExists($aFolderNames[0])) {
 					$oDirectory->createDirectory($aFolderNames[0]);
 				} else {
-					throw new ApiException(FilesErrorCodes::AlreadeExists);
+					if (count($aFolderNames) === 1) {
+						throw new ApiException(FilesErrorCodes::AlreadeExists);
+					}
 				}
 				if (isset($aFolderNames[1])) {
 					$this->createFolder($iUserId, $sType, $sPath . '/' . $aFolderNames[0], $aFolderNames[1]);
