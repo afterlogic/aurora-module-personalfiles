@@ -8,6 +8,9 @@
 		"afterlogic/aurora-module-files": "~0.10.0",
 		"afterlogic/dav": "3.*|4.*"
 	},
+	"autoload": {
+		"classmap": ["/"]
+	},
 	"extra": {
 		"installer-name": "PersonalFiles"
 	}
