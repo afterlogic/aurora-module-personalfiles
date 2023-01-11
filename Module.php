@@ -149,11 +149,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 	/**
 	* Returns Min module decorator.
 	*
-	* @return \CApiModuleDecorator
+	* @return \Aurora\System\Module\Decorator
 	*/
 	private function getMinModuleDecorator()
 	{
-		Api::GetModuleDecorator('Min');
+		return Api::GetModuleDecorator('Min');
 	}
 
 	/**
@@ -328,6 +328,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 				return true;
 			}
 		}
+
+		return false;
 	}
 
 	/**

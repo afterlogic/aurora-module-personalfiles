@@ -636,6 +636,8 @@ if ($oItem instanceof File) {
 				}
 			}
 		}
+
+		return true;
 	}
 
 	/**
