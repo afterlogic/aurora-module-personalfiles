@@ -15,7 +15,6 @@ use Afterlogic\DAV\FS\Shared\File as SharedFile;
 use Afterlogic\DAV\FS\Shared\Directory as SharedDirectory;
 use Afterlogic\DAV\Server;
 use Aurora\Modules\Files\Enums\ErrorCodes as FilesErrorCodes;
-use Aurora\Modules\SharedFiles\Enums\ErrorCodes;
 use Aurora\System\Enums\FileStorageType;
 use Aurora\System\Exceptions\ApiException;
 use Exception;
@@ -153,7 +152,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
 			$sID = '';
 			$aProps = [];
-			if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
+			if ($oItem instanceof \Afterlogic\DAV\FS\Directory && class_exists('\Aurora\Modules\Min\Module'))
 			{
 				$sID = \Aurora\Modules\Min\Module::generateHashId([$sUserPublicId, $sType, $sFilePath, $oItem->getName()]);
 				$oResult->IsFolder = true;
@@ -749,15 +748,21 @@ if ($oItem instanceof File) {
 			if ($oItem !== null) {
 				$bIsSharedFile = ($oItem instanceof SharedFile || $oItem instanceof SharedDirectory);
 				$bIsSharedToDirectory = ($oToDirectory instanceof SharedDirectory);
+				$iNotPossibleToMoveSharedFileToSharedFolderErrorCode = 0;
+
+				if (class_exists('\Aurora\Modules\SharedFiles\Enums\ErrorCodes')) {
+					$iNotPossibleToMoveSharedFileToSharedFolderErrorCode = \Aurora\Modules\SharedFiles\Enums\ErrorCodes::NotPossibleToMoveSharedFileToSharedFolder;
+				}
+
 				if ($bMove && $bIsSharedFile && $bIsSharedToDirectory) {
-					throw new ApiException(ErrorCodes::NotPossibleToMoveSharedFileToSharedFolder);
+					throw new ApiException($iNotPossibleToMoveSharedFileToSharedFolderErrorCode);
 				}
 				if ($bMove && $bIsSharedFile && $sToType === FileStorageType::Corporate) {
 					throw new ApiException(\Aurora\Modules\Files\Enums\ErrorCodes::NotPossibleToMoveSharedFileToCorporateStorage);
 				}
 				$aExtendedProps = $oItem->getProperty('ExtendedProps');
 				if (is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']) && $bIsSharedToDirectory) {
-					throw new ApiException(ErrorCodes::NotPossibleToMoveSharedFileToSharedFolder);
+					throw new ApiException($iNotPossibleToMoveSharedFileToSharedFolderErrorCode);
 				}
 				if ($bIsSharedFile && !$oItem->isInherited() && $bMove) {
 					$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
@@ -815,7 +820,7 @@ if ($oItem instanceof File) {
 						$oToDirectory->createDirectory($sNewName);
 
 						$oSharedFiles = \Aurora\Api::GetModule('SharedFiles');
-						if ($oSharedFiles instanceof \Aurora\Modules\SharedFiles\Module)
+						if ($oSharedFiles)
 						{
 							$oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
 //							$oPdo->updateSharedFileSharePathWithLike(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sFromPath, $sToPath);
