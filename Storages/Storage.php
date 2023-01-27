@@ -14,91 +14,76 @@ namespace Aurora\Modules\PersonalFiles\Storages;
  */
 class Storage extends \Aurora\System\Managers\AbstractStorage
 {
-	/**
-	 * 
-	 * @param \Aurora\System\Managers\AbstractManager $oManager
-	 */
-	public function __construct(\Aurora\System\Managers\AbstractManager &$oManager)
-	{
-		parent::__construct($oManager);
-	}
-	
-	/**
-	 * @param \Aurora\Modules\StandardAuth\Classes\Account $oAccount
-	 */
-	public function init($oAccount)
-	{
-	
-	}
-	
-	public function isFileExists($oAccount, $iType, $sPath, $sName)
-	{
-		return false;
-	}
-	
-	public function getFileInfo($iUserId, $sType, $oItem)
-	{
-	
-	}
-	
-	public function getDirectoryInfo($oAccount, $iType, $sPath)
-	{
-		
-	}
-	
-	public function getFile($oAccount, $iType, $sPath, $sName)
-	{
+    /**
+     *
+     * @param \Aurora\System\Managers\AbstractManager $oManager
+     */
+    public function __construct(\Aurora\System\Managers\AbstractManager &$oManager)
+    {
+        parent::__construct($oManager);
+    }
 
-	}
+    /**
+     * @param \Aurora\Modules\StandardAuth\Classes\Account $oAccount
+     */
+    public function init($oAccount)
+    {
+    }
 
-	public function getFiles($oAccount, $iType, $sPath, $sPattern)
-	{
-		
-	}
-	
-	public function createFolder($oAccount, $iType, $sPath, $sFolderName)
-	{
+    public function isFileExists($oAccount, $iType, $sPath, $sName)
+    {
+        return false;
+    }
 
-	}
-	
-	public function createFile($iUserId, $sType, $sPath, $sFileName, $sData, $rangeType, $offset)
-	{
+    public function getFileInfo($iUserId, $sType, $oItem)
+    {
+    }
 
-	}
-	
-	public function createLink($oAccount, $iType, $sPath, $sLink, $sName)
-	{
-	
-		
-	}	
-	
-	public function delete($oAccount, $iType, $sPath, $sName)
-	{
+    public function getDirectoryInfo($oAccount, $iType, $sPath)
+    {
+    }
 
-	}
+    public function getFile($oAccount, $iType, $sPath, $sName)
+    {
+    }
 
-	public function rename($oAccount, $iType, $sPath, $sName, $sNewName)
-	{
+    public function getFiles($oAccount, $iType, $sPath, $sPattern)
+    {
+    }
 
-	}
-	
-	public function copy($oAccount, $iFromType, $iToType, $sFromPath, $sToPath, $sName, $sNewName)
-	{
-		
-	}
+    public function createFolder($oAccount, $iType, $sPath, $sFolderName)
+    {
+    }
 
-	public function getNonExistentFileName($oAccount, $iType, $sPath, $sFileName)
-	{
-	
-	}	
-	
-	public function clearPrivateFiles($oAccount)
-	{
-		
-	}
+    public function createFile($iUserId, $sType, $sPath, $sFileName, $sData, $rangeType, $offset)
+    {
+    }
 
-	public function clearCorporateFiles($oAccount)
-	{
-		
-	}
+    public function createLink($oAccount, $iType, $sPath, $sLink, $sName)
+    {
+    }
+
+    public function delete($oAccount, $iType, $sPath, $sName)
+    {
+    }
+
+    public function rename($oAccount, $iType, $sPath, $sName, $sNewName)
+    {
+    }
+
+    public function copy($oAccount, $iFromType, $iToType, $sFromPath, $sToPath, $sName, $sNewName)
+    {
+    }
+
+    public function getNonExistentFileName($oAccount, $iType, $sPath, $sFileName)
+    {
+    }
+
+    public function clearPrivateFiles($oAccount)
+    {
+    }
+
+    public function clearCorporateFiles($oAccount)
+    {
+    }
 }
