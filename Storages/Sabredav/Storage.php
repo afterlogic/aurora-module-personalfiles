@@ -273,6 +273,11 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
         $oNode = \Afterlogic\DAV\Server::getNodeForPath('files/' . $sType . $sPath . '/' . $sName, $iUserId);
 
+        if (!$oNode && $sType === \Aurora\System\Enums\FileStorageType::Shared) {
+            $sType = \Aurora\System\Enums\FileStorageType::Personal;
+            $oNode = \Afterlogic\DAV\Server::getNodeForPath('files/' . $sType . $sPath . '/' . $sName, $iUserId);
+        }
+
         if ($oNode instanceof \Afterlogic\DAV\FS\File) {
             $sResult = $oNode->get(false);
         }
@@ -352,6 +357,13 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
         $aResult = [];
 
         $oDirectory = $this->getDirectory($sUserPublicId, $sType, $sPath);
+
+        if (!$oDirectory && $sType === \Aurora\System\Enums\FileStorageType::Shared) {
+            $oDirectory = $this->getDirectory($sUserPublicId, \Aurora\System\Enums\FileStorageType::Personal, $sPath);
+            if ($oDirectory instanceof \Afterlogic\DAV\FS\Shared\Directory) {
+                $sType = \Aurora\System\Enums\FileStorageType::Personal;
+            }
+        }
 
         $oServer = \Afterlogic\DAV\Server::getInstance();
         \Afterlogic\DAV\Server::setUser($sUserPublicId);
