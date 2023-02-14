@@ -140,6 +140,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
             $oResult->Shared = $bShared;
             $oResult->GroupId = $bShared ? $oItem->getGroupId() : null;
             $oResult->Initiator = $bShared ? basename($oItem->getInitiator()) : null;
+            $oResult->LastModified = $oItem->getLastModified();
 
             $sID = '';
             $aProps = [];
@@ -165,7 +166,6 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
                 $oResult->IsFolder = false;
                 $oResult->Size = $oItem->getSize();
-                $oResult->LastModified = $oItem->getLastModified();
 
                 $oResult->AddAction([
                     'view' => [
