@@ -636,7 +636,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $iSpaceLimitMb = FilesModule::getInstance()->getConfig('UserSpaceLimitMb', 0);
 
         $iUserId = Api::getAuthenticatedUserId();
-        $oUser = CoreModule::Decorator()->GetUserUnchecked($iUserId);
+        $oUser = CoreModule::Decorator()->GetUserWithoutRoleCheck($iUserId);
 
         if ($oUser) {
             $iSpaceLimitMb = $oUser->{'Files::UserSpaceLimitMb'};
@@ -663,7 +663,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         if ($this->checkStorageType($aArgs['Type'])) {
             $iSize = 0;
 
-            $oUser = CoreModule::Decorator()->GetUserUnchecked($aArgs['UserId']);
+            $oUser = CoreModule::Decorator()->GetUserWithoutRoleCheck($aArgs['UserId']);
 
             if ($oUser) {
                 $iSize = isset($oUser->{self::GetName() . '::UsedSpace'}) ? $oUser->{self::GetName() . '::UsedSpace'} : 0;
