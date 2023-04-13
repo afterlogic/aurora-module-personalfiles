@@ -36,7 +36,7 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
     /**
     * Returns Min module decorator.
     *
-    * @return \CApiModuleDecorator
+    * @return \Aurora\Modules\Min\Module
     */
     public function getMinModuleDecorator()
     {
@@ -122,9 +122,9 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
      *
      * @return resource|bool
      */
-    public function getFile($iUserId, $iType, $sPath, $sName, $iOffset = 0, $iChunkSize = 0)
+    public function getFile($iUserId, $iType, $sPath, $sName)
     {
-        return $this->oStorage->getFile($iUserId, $iType, $sPath, $sName, $iOffset, $iChunkSize);
+        return $this->oStorage->getFile($iUserId, $iType, $sPath, $sName);
     }
 
     /**
@@ -317,7 +317,7 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
      * Returns space used by the user in specified storages, in bytes.
      *
      * @param int $iUserId User identifier.
-     * @param string $aTypes Storage type list. Accepted values in array: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**.
+     * @param array $aTypes Storage type list. Accepted values in array: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**.
      *
      * @return int;
      */
@@ -356,7 +356,7 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
      * @param string $sType Storage type. Accepted values: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**.
      * @param string $sPath Path to the folder which contains the file, empty string means the file is in the root folder.
      * @param string $sName Filename.
-     * @param array $ExtendedProps
+     * @param array $aExtendedProps
      *
      * @return bool
      */
@@ -387,7 +387,6 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
      * @param string $sType Storage type. Accepted values: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**.
      * @param string $sPath Path to the folder which contains the file, empty string means the file is in the root folder.
      * @param string $sName Filename.
-     * @param array $ExtendedProps
      *
      * @return bool
      */

@@ -72,7 +72,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
      * @param string $sType
      * @param string $sPath
      *
-     * @return Afterlogic\DAV\FS\Directory|null
+     * @return \Afterlogic\DAV\FS\Directory|null
      */
     public function getDirectory($sUserPublicId, $sType, $sPath = '')
     {
@@ -128,7 +128,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
             $sFilePath = !empty(trim($sPath, '/')) ? '/' . ltrim($sPath, '/') : ($bShared ? $oItem->getSharePath() : $oItem->getRelativePath());
 
-            $oResult = new  \Aurora\Modules\Files\Classes\FileItem();
+            $oResult = new \Aurora\Modules\Files\Classes\FileItem();
             $oResult->Type = $sType;
             $oResult->TypeStr = $sType;
             $oResult->RealPath = $oItem->getPath();
@@ -246,7 +246,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
      * @param string $sType
      * @param string $sPath
      *
-     * @return Afterlogic\DAV\FS\Directory|null
+     * @return \Afterlogic\DAV\FS\Directory|null
      */
     public function getDirectoryInfo($iUserId, $sType, $sPath)
     {
@@ -265,7 +265,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
      * @param string $sPath
      * @param string $sName
      *
-     * @return Afterlogic\DAV\FS\File|null
+     * @return \Afterlogic\DAV\FS\File|null
      */
     public function getFile($iUserId, $sType, $sPath, $sName)
     {
@@ -344,7 +344,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
     }
 
     /**
-     * @param int $iUserId
+     * @param string $sUserPublicId
      * @param string $sType
      * @param string $sPath
      * @param string $sPattern
@@ -419,7 +419,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                     if (isset($oDirectoryInfo['Link']) && strpos($oDirectoryInfo['Name'], $sPattern) !== false) {
                         $oNode = new \Afterlogic\DAV\FS\File($sType, $oDirectory->getPath() . '/' . $oDirectoryInfo['@Name']);
                         if ($oNode) {
-                            $aResult[] = $this->getFileInfo($sUserPublicId, $sType, $oItem, $sPublicHash, $sPath);
+                            $aResult[] = $this->getFileInfo($sUserPublicId, $sType, $oNode, $sPublicHash, $sPath);
                         }
                     }
                 }
@@ -577,7 +577,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
      * @param string $sPath
      * @param string $sName
      * @param string $sNewName
-     * @param Afterlogic\DAV\FS\File|Afterlogic\DAV\FS\Directory
+     * @param \Afterlogic\DAV\FS\File|\Afterlogic\DAV\FS\Directory $oItem
      * @param bool $bDelete Default value is **false**.
      *
      * @return bool
@@ -676,6 +676,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
     public function renameLink($iUserId, $sType, $sPath, $sName, $sNewName)
     {
         $oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
+        /** @var \Afterlogic\DAV\FS\File|\Afterlogic\DAV\FS\Directory $oItem */
         $oItem = $oDirectory->getChild($sName);
 
         if ($oItem) {
@@ -714,6 +715,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
         if ($oToDirectory && $oFromDirectory) {
             $oItem = null;
             try {
+                /** @var \Afterlogic\DAV\FS\File|\Afterlogic\DAV\FS\Directory $oItem */
                 $oItem = $oFromDirectory->getChild($sName);
             } catch (\Exception $oEx) {
             }
@@ -747,6 +749,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                             $oItem->get(false)
                         );
 
+                        /** @var \Afterlogic\DAV\FS\File $oItemNew */
                         $oItemNew = $oToDirectory->getChild($sNewName);
 
                         if ($oItemNew && $bMove) {
@@ -791,10 +794,11 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                     if ($oItem instanceof \Afterlogic\DAV\FS\Directory) {
                         $oToDirectory->createDirectory($sNewName);
 
+                        /** @var \Aurora\Modules\SharedFiles\Module $oSharedFiles */
                         $oSharedFiles = \Aurora\Api::GetModule('SharedFiles');
                         if ($oSharedFiles) {
                             $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
-                            //							$oPdo->updateSharedFileSharePathWithLike(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sFromPath, $sToPath);
+                            // $oPdo->updateSharedFileSharePathWithLike(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sFromPath, $sToPath);
 
                             $aShares = $oPdo->getShares(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName);
                             foreach ($aShares as $aShare) {

@@ -32,7 +32,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     /**
      * Indicates if it's allowed to move files/folders to this storage.
-     * @var type bool
+     * @var boolean
      */
     protected static $bIsDroppable = true;
 
@@ -40,13 +40,13 @@ class Module extends \Aurora\System\Module\AbstractModule
     protected $oBeforeDeleteUser = null;
     /**
      *
-     * @var \CApiFilesManager
+     * @var \Aurora\Modules\PersonalFiles\Manager
      */
     public $oManager = null;
 
     /**
      *
-     * @var \CApiModuleDecorator
+     * @var \Aurora\Modules\Min\Module
      */
     protected $oMinModuleDecorator = null;
 
@@ -57,6 +57,15 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
 
         return $this->oManager;
+    }
+
+    /**
+     *
+     * @return Module
+     */
+    public static function Decorator()
+    {
+        return parent::Decorator();
     }
 
     /**
@@ -226,7 +235,7 @@ class Module extends \Aurora\System\Module\AbstractModule
      * @param array $aArgs Arguments of event.
      * @param mixed $mResult Is passed by reference.
      */
-    public function onCreateFile($aArgs, &$Result)
+    public function onCreateFile($aArgs, &$mResult)
     {
         if ($this->checkStorageType($aArgs['Type'])) {
             $UserId = $aArgs['UserId'];
@@ -234,7 +243,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             $currentUser = Server::getUser();
             Server::setUser(Api::getUserPublicIdById($UserId));
-            $Result = $this->getManager()->createFile(
+            $mResult = $this->getManager()->createFile(
                 Api::getUserPublicIdById($UserId),
                 isset($aArgs['Type']) ? $aArgs['Type'] : null,
                 isset($aArgs['Path']) ? $aArgs['Path'] : null,
@@ -639,7 +648,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oUser = CoreModule::Decorator()->GetUserWithoutRoleCheck($iUserId);
 
         if ($oUser) {
-            $iSpaceLimitMb = $oUser->{'Files::UserSpaceLimitMb'};
+            $iSpaceLimitMb = $oUser->getExtendedProp('Files::UserSpaceLimitMb');
         }
 
         $aArgs = [
