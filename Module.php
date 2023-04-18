@@ -69,6 +69,15 @@ class Module extends \Aurora\System\Module\AbstractModule
     }
 
     /**
+     *
+     * @return Settings
+     */
+    protected function GetModuleSettings()
+    {
+        return $this->oModuleSettings;
+    }
+
+    /**
      * Initializes Files Module.
      *
      * @ignore
