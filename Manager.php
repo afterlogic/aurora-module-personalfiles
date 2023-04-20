@@ -17,6 +17,8 @@ use Aurora\System\EventEmitter;
  * @copyright Copyright (c) 2023, Afterlogic Corp.
  *
  * @package Filestorage
+ *
+ * @property Module $oModule
  */
 class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
 {

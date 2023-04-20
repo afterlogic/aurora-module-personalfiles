@@ -62,7 +62,14 @@ class Module extends \Aurora\System\Module\AbstractModule
     }
 
     /**
-     *
+     * @return Module
+     */
+    public static function getInstance()
+    {
+        return parent::getInstance();
+    }
+
+    /**
      * @return Module
      */
     public static function Decorator()
@@ -71,7 +78,6 @@ class Module extends \Aurora\System\Module\AbstractModule
     }
 
     /**
-     *
      * @return Settings
      */
     public function getModuleSettings()
@@ -653,7 +659,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     protected function getUserSpaceLimitMb()
     {
-        $iSpaceLimitMb = FilesModule::getInstance()->getConfig('UserSpaceLimitMb', 0);
+        $iSpaceLimitMb = FilesModule::getInstance()->oModuleSettings->UserSpaceLimitMb;
 
         $iUserId = Api::getAuthenticatedUserId();
         $oUser = CoreModule::Decorator()->GetUserWithoutRoleCheck($iUserId);
