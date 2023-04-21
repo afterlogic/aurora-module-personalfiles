@@ -214,8 +214,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                 }
 
                 $oSettings =& \Aurora\System\Api::GetSettings();
-                if ($oSettings->GetValue('AllowThumbnail', true) && !$oResult->Thumb) {
-                    $iThumbnailLimit = ((int) $oSettings->GetValue('ThumbnailMaxFileSizeMb', 5)) * 1024 * 1024;
+                if ($oSettings->AllowThumbnail && !$oResult->Thumb) {
+                    $iThumbnailLimit = ((int) $oSettings->ThumbnailMaxFileSizeMb) * 1024 * 1024;
                     $oResult->Thumb = $oResult->Size < $iThumbnailLimit && \Aurora\System\Utils::IsGDImageMimeTypeSuppoted($oResult->ContentType, $oResult->Name);
                 }
             }
