@@ -694,7 +694,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $oUser = CoreModule::Decorator()->GetUserWithoutRoleCheck($aArgs['UserId']);
 
             if ($oUser) {
-                $iSize = isset($oUser->{self::GetName() . '::UsedSpace'}) ? $oUser->{self::GetName() . '::UsedSpace'} : 0;
+                $iSize = null !== $oUser->getExtendedProp(self::GetName() . '::UsedSpace') ? $oUser->getExtendedProp(self::GetName() . '::UsedSpace') : 0;
             }
 
             $mResult = array(
