@@ -630,11 +630,18 @@ class Module extends \Aurora\System\Module\AbstractModule
             Api::CheckAccess($UserId);
 
             $sUserPiblicId = Api::getUserPublicIdById($UserId);
-            foreach ($aArgs['Files'] as $aItem) {
+            foreach ($aArgs['Files'] as $key => $aItem) {
                 $bIntoItself = $aArgs['ToType'].'/'.$aArgs['ToPath'] === $aItem['FromType'].'/'.$aItem['FromPath'];
 
                 if (!$bIntoItself) {
                     $sNewName = isset($aItem['NewName']) ? $aItem['NewName'] : $aItem['Name'];
+                    $sNewName = $this->getManager()->getNonExistentFileName(
+                        $sUserPiblicId,
+                        $aArgs['ToType'],
+                        $aArgs['ToPath'],
+                        $sNewName
+                    );
+                    $aArgs['Files'][$key]['NewName'] = $sNewName;
                     $mResult = $this->getManager()->copy(
                         $sUserPiblicId,
                         $aItem['FromType'],
@@ -642,12 +649,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                         $aItem['FromPath'],
                         $aArgs['ToPath'],
                         $aItem['Name'],
-                        $this->getManager()->getNonExistentFileName(
-                            $sUserPiblicId,
-                            $aArgs['ToType'],
-                            $aArgs['ToPath'],
-                            $sNewName
-                        ),
+                        $sNewName,
                         true
                     );
                 } else {
