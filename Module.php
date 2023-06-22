@@ -543,7 +543,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                     }
                 }
 
-                $oNode->delete();
+                \Afterlogic\DAV\Server::deleteNode('files/' . $aArgs['Type'] . '/' . $aItem['Path'] . '/' . $aItem['Name']);
 
                 $oItem = new FileItem();
                 $oItem->Id = $aItem['Name'];

@@ -562,8 +562,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                 $this->updateMin($iUserId, $sType, $sPath, $sName, $sName, $oItem, true);
             }
 
-            $oItem->delete();
-            return true;
+            return \Afterlogic\DAV\Server::deleteNode($sNodePath, $iUserId);
         } else {
             throw new ApiException(FilesErrorCodes::NotFound);
         }
@@ -741,7 +740,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                 }
                 if ($bIsSharedFile && !$oItem->isInherited() && $bMove) {
                     $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
-                    $oPdo->updateSharedFileSharePath(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $oItem->getName(), $sFromPath, $sToPath, $oItem->getGroupId());
+                    $oPdo->updateSharedFileSharePath(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $oItem->getName(), $sNewName, $sFromPath, $sToPath, $oItem->getGroupId());
                 } else {
                     if ($oItem instanceof \Afterlogic\DAV\FS\File) {
                         $oToDirectory->createFile(
@@ -841,7 +840,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                         }
                     }
                     if ($bMove) {
-                        $oItem->delete();
+                        \Afterlogic\DAV\Server::deleteNode('files/' . $sFromType . '/' . $sFromPath . '/' . $sName);
                     }
                 }
                 return true;
