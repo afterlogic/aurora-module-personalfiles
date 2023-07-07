@@ -31,6 +31,12 @@ class Settings extends \Aurora\System\Module\Settings
                 null,
                 "Defines a default filesystem quota for user account, in Mbytes",
             ),
+            "ShowSharedFilesInPersonalStorage" => new SettingsProperty(
+                true,
+                "bool",
+                null,
+                "Setting to true show shared with me files in personal storage",
+            ),
         ];
     }
 }
