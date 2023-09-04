@@ -221,6 +221,26 @@ class Module extends \Aurora\System\Module\AbstractModule
     }
 
     /**
+     * Checks if file name is allowed.
+     *
+     * @param string $FileName
+     *
+     * @return bool
+     */
+    protected function isFileAllowed($FileName)
+    {
+        $forbiddenFileList = [
+            '.sabredav'
+        ];
+
+        $FileName = \trim(\MailSo\Base\Utils::ClearFileName($FileName));
+
+        $result = !in_array($FileName, $forbiddenFileList);
+
+        return  $result;
+    }
+
+    /**
      * Puts file content to $mResult.
      * @ignore
      * @param array $aArgs Arguments of event.
@@ -257,6 +277,10 @@ class Module extends \Aurora\System\Module\AbstractModule
     public function onCreateFile($aArgs, &$mResult)
     {
         if ($this->checkStorageType($aArgs['Type'])) {
+            if (!self::isFileAllowed($aArgs['Name'])) {
+                throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::CanNotUploadFileErrorData);
+            }
+
             $UserId = $aArgs['UserId'];
             Api::CheckAccess($UserId);
 
@@ -572,6 +596,10 @@ class Module extends \Aurora\System\Module\AbstractModule
             $UserId = $aArgs['UserId'];
             Api::CheckAccess($UserId);
 
+            if (self::isFileAllowed($aArgs['Name'])) {
+                throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::CanNotUploadFileErrorData);
+            }
+
             $sUserPiblicId = Api::getUserPublicIdById($UserId);
             $sNewName = \trim(\MailSo\Base\Utils::ClearFileName($aArgs['NewName']));
 
@@ -635,6 +663,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 
                 if (!$bIntoItself) {
                     $sNewName = isset($aItem['NewName']) ? $aItem['NewName'] : $aItem['Name'];
+
+                    if (self::IsFileAllowed(basename($sNewName))) {
+                        throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::CanNotUploadFileErrorData);
+                    }
+
                     $sNewName = $this->getManager()->getNonExistentFileName(
                         $sUserPiblicId,
                         $aArgs['ToType'],
