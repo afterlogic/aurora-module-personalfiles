@@ -596,7 +596,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $UserId = $aArgs['UserId'];
             Api::CheckAccess($UserId);
 
-            if (self::isFileAllowed($aArgs['Name'])) {
+            if (!self::isFileAllowed($aArgs['Name'])) {
                 throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::CanNotUploadFileErrorData);
             }
 
@@ -664,7 +664,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 if (!$bIntoItself) {
                     $sNewName = isset($aItem['NewName']) ? $aItem['NewName'] : $aItem['Name'];
 
-                    if (self::IsFileAllowed(basename($sNewName))) {
+                    if (!self::IsFileAllowed(basename($sNewName))) {
                         throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::CanNotUploadFileErrorData);
                     }
 
