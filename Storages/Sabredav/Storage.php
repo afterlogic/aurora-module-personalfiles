@@ -169,7 +169,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
                 $oResult->AddAction([
                     'view' => [
-                        'url' => '?download-file/' . $oResult->getHash($sPublicHash) .'/view'
+                        'url' => '?download-file/' . $oResult->getHash($sPublicHash) . '/view'
                     ]
                 ]);
                 $sID = \Aurora\Modules\Min\Module::generateHashId([$sUserPublicId, $sType, $sFilePath, $oItem->getName()]);
@@ -213,7 +213,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                     $oResult->ContentType = \Aurora\System\Utils::MimeContentType($oResult->Name);
                 }
 
-                $oSettings =& \Aurora\System\Api::GetSettings();
+                $oSettings = &\Aurora\System\Api::GetSettings();
                 if ($oSettings->AllowThumbnail && !$oResult->Thumb) {
                     $iThumbnailLimit = ((int) $oSettings->ThumbnailMaxFileSizeMb) * 1024 * 1024;
                     $oResult->Thumb = $oResult->Size < $iThumbnailLimit && \Aurora\System\Utils::IsGDImageMimeTypeSuppoted($oResult->ContentType, $oResult->Name);
@@ -375,7 +375,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                 $depth = -1;
             }
 
-            $sPath = 'files/' . $sType . '/'. trim($sPath, '/');
+            $sPath = 'files/' . $sType . '/' . trim($sPath, '/');
             $oIterator = $oServer->getPropertiesIteratorForPath($sPath, [
                 '{DAV:}displayname',
                 '{DAV:}getlastmodified',
@@ -408,7 +408,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                         $aHref = \explode('/', $sHref, 3);
                         list($sSubFullPath, ) = \Sabre\Uri\split($aHref[2]);
 
-                        $aResult[] = $this->getFileInfo($sUserPublicId, $sType, $oNode, $sPublicHash, '/'. trim($sSubFullPath, '/'));
+                        $aResult[] = $this->getFileInfo($sUserPublicId, $sType, $oNode, $sPublicHash, '/' . trim($sSubFullPath, '/'));
                     }
                 }
             }
@@ -887,7 +887,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
         $sUploadNameExt = '';
         $sUploadNameWOExt = $sFileName;
         if (isset($sFileNamePathInfo['extension'])) {
-            $sUploadNameExt = '.'.$sFileNamePathInfo['extension'];
+            $sUploadNameExt = '.' . $sFileNamePathInfo['extension'];
         }
 
         if (isset($sFileNamePathInfo['filename'])) {
@@ -895,7 +895,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
         }
 
         while ($this->isFileExists($oAccount, $iType, $sPath, $sFileName, $bWithoutGroup)) {
-            $sFileName = $sUploadNameWOExt.' ('.$iIndex.')'.$sUploadNameExt;
+            $sFileName = $sUploadNameWOExt . ' (' . $iIndex . ')' . $sUploadNameExt;
             $iIndex++;
         }
 

@@ -334,14 +334,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 
                         if (empty($sFileExtension)) {
                             $sFileExtension = \Aurora\System\Utils::GetFileExtensionFromMimeContentType($aRemoteFileInfo['content-type']);
-                            $sFileName .= '.'.$sFileExtension;
+                            $sFileName .= '.' . $sFileExtension;
                         }
 
                         if ($sFileExtension === 'htm' || $sFileExtension === 'html') {
                             $sTitle = $this->getHtmlTitle($sUrl);
                         }
 
-                        $mResult['Name'] = isset($sTitle) && strlen($sTitle)> 0 ? $sTitle : urldecode($sFileName);
+                        $mResult['Name'] = isset($sTitle) && strlen($sTitle) > 0 ? $sTitle : urldecode($sFileName);
                         $mResult['Size'] = $aRemoteFileInfo['size'];
                     }
                 }
@@ -623,7 +623,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         if ($this->checkStorageType($aArgs['FromType'])) {
             foreach ($aArgs['Files'] as $aItem) {
-                $bFolderIntoItself = isset($aItem['IsFolder']) && $aItem['IsFolder'] && $aArgs['ToPath'] === $aItem['FromPath'].'/'.$aItem['Name'];
+                $bFolderIntoItself = isset($aItem['IsFolder']) && $aItem['IsFolder'] && $aArgs['ToPath'] === $aItem['FromPath'] . '/' . $aItem['Name'];
                 if (!$bFolderIntoItself) {
                     $sNewName = isset($aItem['NewName']) ? $aItem['NewName'] : $aItem['Name'];
                     $mResult = $this->getManager()->copy(
@@ -659,7 +659,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             $sUserPiblicId = Api::getUserPublicIdById($UserId);
             foreach ($aArgs['Files'] as $key => $aItem) {
-                $bIntoItself = $aArgs['ToType'].'/'.$aArgs['ToPath'] === $aItem['FromType'].'/'.$aItem['FromPath'];
+                $bIntoItself = $aArgs['ToType'] . '/' . $aArgs['ToPath'] === $aItem['FromType'] . '/' . $aItem['FromPath'];
 
                 if (!$bIntoItself) {
                     $sNewName = isset($aItem['NewName']) ? $aItem['NewName'] : $aItem['Name'];

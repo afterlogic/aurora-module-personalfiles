@@ -26,64 +26,36 @@ class Storage extends \Aurora\System\Managers\AbstractStorage
     /**
      * @param \Aurora\Modules\StandardAuth\Models\Account $oAccount
      */
-    public function init($oAccount)
-    {
-    }
+    public function init($oAccount) {}
 
     public function isFileExists($oAccount, $iType, $sPath, $sName)
     {
         return false;
     }
 
-    public function getFileInfo($iUserId, $sType, $oItem)
-    {
-    }
+    public function getFileInfo($iUserId, $sType, $oItem) {}
 
-    public function getDirectoryInfo($oAccount, $iType, $sPath)
-    {
-    }
+    public function getDirectoryInfo($oAccount, $iType, $sPath) {}
 
-    public function getFile($oAccount, $iType, $sPath, $sName)
-    {
-    }
+    public function getFile($oAccount, $iType, $sPath, $sName) {}
 
-    public function getFiles($oAccount, $iType, $sPath, $sPattern)
-    {
-    }
+    public function getFiles($oAccount, $iType, $sPath, $sPattern) {}
 
-    public function createFolder($oAccount, $iType, $sPath, $sFolderName)
-    {
-    }
+    public function createFolder($oAccount, $iType, $sPath, $sFolderName) {}
 
-    public function createFile($iUserId, $sType, $sPath, $sFileName, $sData, $rangeType, $offset)
-    {
-    }
+    public function createFile($iUserId, $sType, $sPath, $sFileName, $sData, $rangeType, $offset) {}
 
-    public function createLink($oAccount, $iType, $sPath, $sLink, $sName)
-    {
-    }
+    public function createLink($oAccount, $iType, $sPath, $sLink, $sName) {}
 
-    public function delete($oAccount, $iType, $sPath, $sName)
-    {
-    }
+    public function delete($oAccount, $iType, $sPath, $sName) {}
 
-    public function rename($oAccount, $iType, $sPath, $sName, $sNewName)
-    {
-    }
+    public function rename($oAccount, $iType, $sPath, $sName, $sNewName) {}
 
-    public function copy($oAccount, $iFromType, $iToType, $sFromPath, $sToPath, $sName, $sNewName)
-    {
-    }
+    public function copy($oAccount, $iFromType, $iToType, $sFromPath, $sToPath, $sName, $sNewName) {}
 
-    public function getNonExistentFileName($oAccount, $iType, $sPath, $sFileName)
-    {
-    }
+    public function getNonExistentFileName($oAccount, $iType, $sPath, $sFileName) {}
 
-    public function clearPrivateFiles($oAccount)
-    {
-    }
+    public function clearPrivateFiles($oAccount) {}
 
-    public function clearCorporateFiles($oAccount)
-    {
-    }
+    public function clearCorporateFiles($oAccount) {}
 }
