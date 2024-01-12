@@ -23,10 +23,7 @@ class Storage extends \Aurora\System\Managers\AbstractStorage
         parent::__construct($oManager);
     }
 
-    /**
-     * @param \Aurora\Modules\StandardAuth\Models\Account $oAccount
-     */
-    public function init($oAccount) {}
+    public function init() {}
 
     public function isFileExists($oAccount, $iType, $sPath, $sName)
     {

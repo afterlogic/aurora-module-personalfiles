@@ -873,14 +873,14 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
     }
 
     /**
-     * @param \Aurora\Modules\StandardAuth\Models\Account $oAccount
+     * @param int $iUserId
      * @param int $iType
      * @param string $sPath
      * @param string $sFileName
      *
      * @return string
      */
-    public function getNonExistentFileName($oAccount, $iType, $sPath, $sFileName, $bWithoutGroup = false)
+    public function getNonExistentFileName($iUserId, $iType, $sPath, $sFileName, $bWithoutGroup = false)
     {
         $iIndex = 1;
         $sFileNamePathInfo = pathinfo($sFileName);
@@ -894,7 +894,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
             $sUploadNameWOExt = $sFileNamePathInfo['filename'];
         }
 
-        while ($this->isFileExists($oAccount, $iType, $sPath, $sFileName, $bWithoutGroup)) {
+        while ($this->isFileExists($iUserId, $iType, $sPath, $sFileName, $bWithoutGroup)) {
             $sFileName = $sUploadNameWOExt . ' (' . $iIndex . ')' . $sUploadNameExt;
             $iIndex++;
         }
