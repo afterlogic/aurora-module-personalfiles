@@ -129,7 +129,6 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
             $sFilePath = !empty(trim($sPath, '/')) ? '/' . ltrim($sPath, '/') : ($bShared ? $oItem->getSharePath() : $oItem->getRelativePath());
 
             $oResult = new \Aurora\Modules\Files\Classes\FileItem();
-            $oResult->Type = $sType;
             $oResult->TypeStr = $sType;
             $oResult->RealPath = $oItem->getPath();
             $oResult->Path = $sFilePath;
