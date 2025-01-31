@@ -864,9 +864,15 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
         if ($iUserId) {
             foreach ($aTypes as $sType) {
-                $sRootPath = $this->getRootPath($iUserId, $sType, true);
-                $aSize = \Aurora\System\Utils::GetDirectorySize($sRootPath);
-                $iUsageSize += (int) $aSize['size'];
+
+                $oNode = Server::getNodeForPath('files/' . $sType);
+
+                $aQuota = [0, 0];
+                if ($oNode) {
+                    $aQuota = $oNode->getQuotaInfo();
+                }
+
+                $iUsageSize += (int) $aQuota[0];
             }
         }
 
