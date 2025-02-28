@@ -165,7 +165,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         if ($oUser) {
             $iResult = $this->getManager()->getUserSpaceUsed($oUser->PublicId, [\Aurora\System\Enums\FileStorageType::Personal]);
-            $oUser->setExtendedProp(self::GetName() . '::UsedSpace', $iResult);
+            $oUser->setExtendedProp('PersonalFiles::UsedSpace', $iResult);
             $oUser->save();
         }
 
@@ -729,7 +729,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $oUser = \Aurora\Api::getUserById($aArgs['UserId']);
 
             if ($oUser) {
-                $iSize = null !== $oUser->getExtendedProp(self::GetName() . '::UsedSpace') ? $oUser->getExtendedProp(self::GetName() . '::UsedSpace') : 0;
+                $iSize = null !== $oUser->getExtendedProp('PersonalFiles::UsedSpace') ? $oUser->getExtendedProp('PersonalFiles::UsedSpace') : 0;
             }
 
             $mResult = array(
