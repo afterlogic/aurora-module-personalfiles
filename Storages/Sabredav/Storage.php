@@ -368,51 +368,37 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
         Server::setUser($sUserPublicId);
 
         if ($oDirectory !== null && $oDirectory instanceof Directory) {
-            $depth = 1;
             if (!empty($sPattern)) {
                 $oServer->enablePropfindDepthInfinity = true;
-                $depth = -1;
-            }
 
-            $sPath = 'files/' . $sType . '/' . trim($sPath, '/');
-            $oIterator = $oServer->getPropertiesIteratorForPath($sPath, [
-                '{DAV:}displayname',
-                '{DAV:}getlastmodified',
-                '{DAV:}getcontentlength',
-                '{DAV:}resourcetype',
-                '{DAV:}quota-used-bytes',
-                '{DAV:}quota-available-bytes',
-                '{DAV:}getetag',
-                '{DAV:}getcontenttype',
-                '{DAV:}share-path',
-            ], $depth);
-
-            foreach ($oIterator as $iKey => $oItem) {
-                // Skipping the parent path
-                if ($iKey === 0) {
-                    continue;
-                }
-
-                $sHref = $oItem['href'];
-                // Skipping the parent path
-                if ($sHref === $sPath) {
-                    continue;
-                }
-                list(, $sName) = \Sabre\Uri\split($sHref);
-
-                if (empty($sPattern) || fnmatch("*" . $sPattern . "*", $sName, FNM_CASEFOLD)) {
-                    $oNode = Server::getNodeForPath($sHref);
-
-                    if ($oNode && !isset($aResult[$sHref])) {
-                        $aHref = \explode('/', $sHref, 3);
-                        list($sSubFullPath, ) = \Sabre\Uri\split($aHref[2]);
-
-                        $aResult[] = $this->getFileInfo($sUserPublicId, $sType, $oNode, $sPublicHash, '/' . trim($sSubFullPath, '/'));
+                $sPath = 'files/' . $sType . '/' . trim($sPath, '/');
+                $oIterator = $oServer->getPropertiesIteratorForPath($sPath, [], -1);
+    
+                foreach ($oIterator as $iKey => $oItem) {
+                    // Skipping the parent path
+                    if ($iKey === 0) {
+                        continue;
+                    }
+    
+                    $sHref = $oItem['href'];
+                    // Skipping the parent path
+                    if ($sHref === $sPath) {
+                        continue;
+                    }
+                    list(, $sName) = \Sabre\Uri\split($sHref);
+    
+                    if (fnmatch("*" . $sPattern . "*", $sName, FNM_CASEFOLD)) {
+                        $oNode = Server::getNodeForPath($sHref);
+    
+                        if ($oNode && !isset($aResult[$sHref])) {
+                            $aHref = \explode('/', $sHref, 3);
+                            list($sSubFullPath, ) = \Sabre\Uri\split($aHref[2]);
+    
+                            $aResult[] = $this->getFileInfo($sUserPublicId, $sType, $oNode, $sPublicHash, '/' . trim($sSubFullPath, '/'));
+                        }
                     }
                 }
-            }
 
-            if (!empty($sPattern)) {
                 $aDirectoryInfo = $oDirectory->getChildrenProperties();
                 foreach ($aDirectoryInfo as $oDirectoryInfo) {
                     if (isset($oDirectoryInfo['Link']) && strpos($oDirectoryInfo['Name'], $sPattern) !== false) {
@@ -422,8 +408,15 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                         }
                     }
                 }
+
+                $oServer->enablePropfindDepthInfinity = false;
+            } else {
+                $oChildren = $oDirectory->getChildren();
+                foreach ($oChildren as $oChild) {
+                    $sSubFullPath = $oChild->getRelativePath();
+                    $aResult[] = $this->getFileInfo($sUserPublicId, $sType, $oChild, $sPublicHash, '/' . trim($sSubFullPath, '/'));
+                }
             }
-            $oServer->enablePropfindDepthInfinity = false;
 
             usort(
                 $aResult,
