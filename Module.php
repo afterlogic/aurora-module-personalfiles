@@ -42,6 +42,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     protected $oBeforeDeleteUserRootPath = '';
     protected $oBeforeDeleteUser = null;
+    public static $sTrashFolder = '.trash';
+
     /**
      *
      * @var \Aurora\Modules\PersonalFiles\Manager
@@ -103,6 +105,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $this->subscribeEvent('Files::GetStorages::after', array($this, 'onAfterGetStorages'));
         $this->subscribeEvent('Files::GetFileInfo::after', array($this, 'onAfterGetFileInfo'), 10);
+        $this->subscribeEvent('Files::GetItems::before', [$this, 'onBeforeGetItems']);
         $this->subscribeEvent('Files::GetItems', array($this, 'onGetItems'));
         $this->subscribeEvent('Files::CreateFolder::after', array($this, 'onAfterCreateFolder'));
         $this->subscribeEvent('Files::Copy::after', array($this, 'onAfterCopy'));
@@ -238,6 +241,28 @@ class Module extends \Aurora\System\Module\AbstractModule
         $result = !in_array($FileName, $forbiddenFileList);
 
         return  $result;
+    }
+
+    protected function getTrashPath($sPath)
+    {
+        return '/' . self::$sTrashFolder . \ltrim($sPath);
+    }
+
+        /**
+     * @ignore
+     * @param array $aArgs Arguments of event.
+     * @param mixed $mResult Is passed by reference.
+     */
+    public function onBeforeGetItems(&$aArgs, &$mResult)
+    {
+        if ($aArgs['Type'] === 'trash') {
+            $aArgs['Type'] = \Aurora\System\Enums\FileStorageType::Personal;
+            $aArgs['Path'] = $this->getTrashPath($aArgs['Path']);
+
+            if (!FilesModule::Decorator()->IsFileExists($aArgs['UserId'], $aArgs['Type'], '', self::$sTrashFolder)) {
+                FilesModule::Decorator()->CreateFolder($aArgs['UserId'], $aArgs['Type'], '', self::$sTrashFolder);
+            }
+        }
     }
 
     /**
@@ -411,6 +436,16 @@ class Module extends \Aurora\System\Module\AbstractModule
             'Order' => static::$iStorageOrder,
             'IsDroppable' => static::$bIsDroppable
         ]);
+
+        if ($this->getConfig('AllowTrash', true) && $this->checkStorageType(\Aurora\System\Enums\FileStorageType::Personal)) {
+            array_unshift($mResult, [
+                'Type' => 'trash',
+                'DisplayName' => $this->i18N('LABEL_TRASH_STORAGE'),
+                'IsExternal' => false,
+                'Order' => 999,
+                'IsDroppable' => false
+            ]);
+        }
     }
 
     /**
@@ -437,16 +472,27 @@ class Module extends \Aurora\System\Module\AbstractModule
             $sUserPiblicId = Api::getUserPublicIdById($UserId);
             $sHash = isset($aArgs['PublicHash']) ? $aArgs['PublicHash'] : null;
             $bIsShared = isset($aArgs['Shared']) ? !!$aArgs['Shared'] : false;
+
+            $files = $this->getManager()->getFiles(
+                $sUserPiblicId,
+                $aArgs['Type'],
+                $aArgs['Path'],
+                $aArgs['Pattern'],
+                $sHash,
+                $bIsShared
+            );
+
+            if ($aArgs['Path'] === '' && is_array($files)) {
+                foreach ($files as $iKey => $oFileItem) {
+                    if ($oFileItem instanceof FileItem && $oFileItem->IsFolder && $oFileItem->Name === self::$sTrashFolder) {
+                        unset($files[$iKey]);
+                    }
+                }
+            }
+
             $mResult = array_merge(
                 $mResult,
-                $this->getManager()->getFiles(
-                    $sUserPiblicId,
-                    $aArgs['Type'],
-                    $aArgs['Path'],
-                    $aArgs['Pattern'],
-                    $sHash,
-                    $bIsShared
-                )
+                $files
             );
         }
     }
@@ -549,7 +595,8 @@ class Module extends \Aurora\System\Module\AbstractModule
         if ($this->checkStorageType($aArgs['Type'])) {
             $mResult = false;
 
-            foreach ($aArgs['Items']  as $aItem) {
+            $sUserPiblicId = Api::getUserPublicIdById($UserId);
+            foreach ($aArgs['Items'] as $key => $aItem) {
                 try {
                     $oNode = Server::getNodeForPath(Constants::FILESTORAGE_PATH_ROOT . '/' . $aArgs['Type'] . '/' . $aItem['Path'] . '/' . $aItem['Name']);
                 } catch (\Exception $oEx) {
@@ -567,7 +614,40 @@ class Module extends \Aurora\System\Module\AbstractModule
                     }
                 }
 
-                \Afterlogic\DAV\Server::deleteNode('files/' . $aArgs['Type'] . '/' . $aItem['Path'] . '/' . $aItem['Name']);
+                $aPathItems = preg_split('/' . preg_quote('/', '/') . '/', \trim($aItem['Path'], '/'));
+                $sFirstPath = isset($aPathItems[0]) ? $aPathItems[0] : '';
+
+                if ($this->getConfig('AllowTrash', true) && $sFirstPath !== self::$sTrashFolder) {
+                    $sNewName = $this->getManager()->getNonExistentFileName(
+                        $sUserPiblicId,
+                        \Aurora\System\Enums\FileStorageType::Personal,
+                        '/' . self::$sTrashFolder,
+                        $aItem['Name']
+                    );
+                    $aArgs['Files'][$key]['NewName'] = $sNewName;
+                    $mResult = $this->getManager()->copy(
+                        $sUserPiblicId,
+                        $aArgs['Type'],
+                        \Aurora\System\Enums\FileStorageType::Personal,
+                        $aItem['Path'],
+                        '/' . self::$sTrashFolder,
+                        $aItem['Name'],
+                        $sNewName,
+                        true
+                    );
+                    if ($mResult) {
+                        $oNode = Server::getNodeForPath(Constants::FILESTORAGE_PATH_ROOT . '/' . \Aurora\System\Enums\FileStorageType::Personal . '/' . self::$sTrashFolder . '/' . $sNewName);
+                        if ($oNode) {
+                            $mExtendedProps = $oNode->getProperty('ExtendedProps');
+                            $aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
+                            $aExtendedProps['TrashOriginalPath'] = $aItem['Path'] . '/' . $aItem['Name'];
+                
+                            $oNode->setProperty('ExtendedProps', $aExtendedProps);
+                        }
+                    }
+                } else {
+                    Server::deleteNode('files/' . $aArgs['Type'] . '/' . $aItem['Path'] . '/' . $aItem['Name']);
+                }
 
                 $oItem = new FileItem();
                 $oItem->Id = $aItem['Name'];

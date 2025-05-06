@@ -301,8 +301,8 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
      * Copies file or folder, optionally renames it.
      *
      * @param int $iUserId Account object
-     * @param int $iFromType Source storage type. Accepted values: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**.
-     * @param int $iToType Destination storage type. Accepted values: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**.
+     * @param string $sFromType Source storage type. Accepted values: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**.
+     * @param string $sToType Destination storage type. Accepted values: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**.
      * @param string $sFromPath Path to the folder which contains the item.
      * @param string $sToPath Destination path of the item.
      * @param string $sName Current name of file or folder.
@@ -310,9 +310,9 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
      *
      * @return bool
      */
-    public function copy($iUserId, $iFromType, $iToType, $sFromPath, $sToPath, $sName, $sNewName = null, $bMove = false)
+    public function copy($iUserId, $sFromType, $sToType, $sFromPath, $sToPath, $sName, $sNewName = null, $bMove = false)
     {
-        return $this->oStorage->copy($iUserId, $iFromType, $iToType, $sFromPath, $sToPath, $sName, $sNewName, $bMove);
+        return $this->oStorage->copy($iUserId, $sFromType, $sToType, $sFromPath, $sToPath, $sName, $sNewName, $bMove);
     }
 
     /**
