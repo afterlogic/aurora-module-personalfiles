@@ -446,6 +446,15 @@ class Module extends \Aurora\System\Module\AbstractModule
                 'IsDroppable' => false
             ]);
         }
+        if ($this->getConfig('AllowFavorites', true) && $this->checkStorageType(\Aurora\System\Enums\FileStorageType::Personal)) {
+            array_unshift($mResult, [
+                'Type' => 'favorites',
+                'DisplayName' => $this->i18N('LABEL_FAVORITES_STORAGE'),
+                'IsExternal' => false,
+                'Order' => 998,
+                'IsDroppable' => false
+            ]);
+        }
     }
 
     /**
