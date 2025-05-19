@@ -437,7 +437,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             'IsDroppable' => static::$bIsDroppable
         ]);
 
-        if ($this->getConfig('AllowTrash', true) && $this->checkStorageType(\Aurora\System\Enums\FileStorageType::Personal)) {
+        if (FilesModule::getInstance()->getConfig('AllowTrash', true) && $this->checkStorageType(\Aurora\System\Enums\FileStorageType::Personal)) {
             array_unshift($mResult, [
                 'Type' => 'trash',
                 'DisplayName' => $this->i18N('LABEL_TRASH_STORAGE'),
@@ -446,7 +446,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 'IsDroppable' => false
             ]);
         }
-        if ($this->getConfig('AllowFavorites', true) && $this->checkStorageType(\Aurora\System\Enums\FileStorageType::Personal)) {
+        if (FilesModule::getInstance()->getConfig('AllowFavorites', true) && $this->checkStorageType(\Aurora\System\Enums\FileStorageType::Personal)) {
             array_unshift($mResult, [
                 'Type' => 'favorites',
                 'DisplayName' => $this->i18N('LABEL_FAVORITES_STORAGE'),

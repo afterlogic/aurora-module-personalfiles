@@ -37,12 +37,6 @@ class Settings extends \Aurora\System\Module\Settings
                 null,
                 "Setting to true show shared with me files in personal storage",
             ),
-            "AllowTrash" => new SettingsProperty(
-                true,
-                "bool",
-                null,
-                "Setting to true show Trash storage",
-            ),
         ];
     }
 }
