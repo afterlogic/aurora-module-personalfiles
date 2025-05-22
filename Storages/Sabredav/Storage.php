@@ -749,6 +749,12 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                                 $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
                                 $oPdo->updateShare(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName, $sToType, $sToPath . '/' . $sNewName);
                             }
+                            $oFiles = \Aurora\Api::GetModule('Files');
+                            if ($oFiles) {
+                                $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
+                                $iUserId = \Aurora\Api::getUserIdByPublicId($sUserPublicId);
+                                $oPdo->updateFavorite($iUserId, $sFromType, $sFromPath . '/' . $sName, $sToType, $sToPath . '/' . $sNewName);
+                            }
                         }
                         $aProps = $oItem->getProperties(array());
                         if (!$bMove) {
