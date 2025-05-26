@@ -45,6 +45,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
     {
         $sRootPath = null;
         if ($sUserPublicId) {
+            $sUser = '';
             $oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId($sUserPublicId);
             if ($oUser) {
                 $sUser = $bUser ? '/' . $oUser->UUID : '';
@@ -72,7 +73,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
      * @param string $sType
      * @param string $sPath
      *
-     * @return Directory|null
+     * @return \Afterlogic\DAV\FS\Directory|null
      */
     public function getDirectory($sUserPublicId, $sType, $sPath = '')
     {
