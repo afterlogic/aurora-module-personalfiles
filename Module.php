@@ -255,12 +255,12 @@ class Module extends \Aurora\System\Module\AbstractModule
      */
     public function onBeforeGetItems(&$aArgs, &$mResult)
     {
-        if ($aArgs['Type'] === 'trash') {
+        if ($this->getConfig('AllowTrash', true) && $aArgs['Type'] === 'trash') {
             $aArgs['Type'] = \Aurora\System\Enums\FileStorageType::Personal;
             $aArgs['Path'] = $this->getTrashPath($aArgs['Path']);
 
-            if (!FilesModule::Decorator()->IsFileExists($aArgs['UserId'], $aArgs['Type'], '', self::$sTrashFolder)) {
-                FilesModule::Decorator()->CreateFolder($aArgs['UserId'], $aArgs['Type'], '', self::$sTrashFolder);
+            if (!FilesModule::Decorator()->IsFileExists($aArgs['UserId'], \Aurora\System\Enums\FileStorageType::Personal, '', self::$sTrashFolder)) {
+                FilesModule::Decorator()->CreateFolder($aArgs['UserId'], \Aurora\System\Enums\FileStorageType::Personal, '', self::$sTrashFolder);
             }
         }
     }
@@ -627,6 +627,10 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $sFirstPath = isset($aPathItems[0]) ? $aPathItems[0] : '';
 
                 if ($this->getConfig('AllowTrash', true) && $sFirstPath !== self::$sTrashFolder) {
+
+                    if (!FilesModule::Decorator()->IsFileExists($aArgs['UserId'], \Aurora\System\Enums\FileStorageType::Personal, '', self::$sTrashFolder)) {
+                        FilesModule::Decorator()->CreateFolder($aArgs['UserId'], \Aurora\System\Enums\FileStorageType::Personal, '', self::$sTrashFolder);
+                    }
                     $sNewName = $this->getManager()->getNonExistentFileName(
                         $sUserPiblicId,
                         \Aurora\System\Enums\FileStorageType::Personal,
