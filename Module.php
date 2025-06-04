@@ -617,7 +617,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                     throw new ApiException(ErrorCodes::NotFound, null, "Node not found");
                 }
 
-                if ($oNode instanceof \Afterlogic\DAV\FS\Shared\File || $oNode instanceof \Afterlogic\DAV\FS\Shared\Directory) {
+                if ($oNode instanceof SharedFile || $oNode instanceof SharedDirectory) {
                     if (!$oNode->isInherited()) {
                         throw new ApiException(ErrorCodes::CantDeleteSharedItem);
                     }
@@ -627,6 +627,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $sFirstPath = isset($aPathItems[0]) ? $aPathItems[0] : '';
 
                 if ($this->getConfig('AllowTrash', true) && $sFirstPath !== self::$sTrashFolder) {
+                    $oNode->deleteShares();
 
                     if (!FilesModule::Decorator()->IsFileExists($aArgs['UserId'], \Aurora\System\Enums\FileStorageType::Personal, '', self::$sTrashFolder)) {
                         FilesModule::Decorator()->CreateFolder($aArgs['UserId'], \Aurora\System\Enums\FileStorageType::Personal, '', self::$sTrashFolder);
