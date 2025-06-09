@@ -112,6 +112,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $this->subscribeEvent('Files::Move::after', array($this, 'onAfterMove'));
         $this->subscribeEvent('Files::Rename::after', array($this, 'onAfterRename'));
         $this->subscribeEvent('Files::Delete::after', array($this, 'onAfterDelete'));
+        $this->subscribeEvent('Files::Restore::after', array($this, 'onAfterRestore'));
         $this->subscribeEvent('Files::GetQuota::after', array($this, 'onAfterGetQuota'));
         $this->subscribeEvent('Files::CreateLink::after', array($this, 'onAfterCreateLink'));
         $this->subscribeEvent('Files::CreatePublicLink::after', array($this, 'onAfterCreatePublicLink'));
@@ -676,6 +677,60 @@ class Module extends \Aurora\System\Module\AbstractModule
             }
 
             self::Decorator()->UpdateUsedSpace();
+        }
+    }
+
+    /**
+     * @ignore
+     * @param array $aArgs Arguments of event.
+     * @param mixed $mResult Is passed by reference.
+     */
+    public function onAfterRestore(&$aArgs, &$mResult)
+    {
+        $UserId = $aArgs['UserId'];
+        $Items = $aArgs['Items'];
+
+        $sUserPiblicId = Api::getUserPublicIdById($UserId);
+        $Files = [];
+        foreach ($Items as $item) {
+            $oNode = Server::getNodeForPath(Constants::FILESTORAGE_PATH_ROOT . '/personal/' . self::$sTrashFolder . '/' . $item);
+            if ($oNode) {
+                $mExtendedProps = $oNode->getProperty('ExtendedProps');
+                $aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
+                $originalPath = isset($aExtendedProps['TrashOriginalPath']) ? $aExtendedProps['TrashOriginalPath'] : false;
+                if ($originalPath === false) {
+                    Api::Log('ERROR: The node \'' . $item .  '\' has no original path');
+                } else {
+
+                    list($toPath, $toName) = \Sabre\Uri\split($originalPath);
+                    $fileItem = [
+                        'FromPath' => '/' . self::$sTrashFolder,
+                        'FromName' => $item,
+                        'ToPath' => $toPath,
+                        'ToName' => $toName,
+                    ];
+                    $fileItem['Name'] = $this->getManager()->getNonExistentFileName(
+                        $sUserPiblicId,
+                        'personal',
+                        $fileItem['ToPath'],
+                        $fileItem['ToName']
+                    );
+                    $Files[] = $fileItem;
+                }
+            }
+        }
+
+        foreach ($Files as $aFileItem) {
+            $mResult = $this->getManager()->copy(
+                $sUserPiblicId,
+                'personal',
+                'personal',
+                $aFileItem['FromPath'],
+                $aFileItem['ToPath'],
+                $aFileItem['FromName'],
+                $aFileItem['ToName'],
+                true
+            );
         }
     }
 

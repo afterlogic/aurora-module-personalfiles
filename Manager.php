@@ -332,15 +332,15 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
      * Allows for obtaining filename which doesn't exist in current directory. For example, if you need to store **data.txt** file but it already exists, this method will return **data_1.txt**, or **data_2.txt** if that one already exists, and so on.
      *
      * @param int $iUserId Account object
-     * @param int $iType Storage type. Accepted values: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**.
+     * @param string $sType Storage type. Accepted values: **\Aurora\System\Enums\FileStorageType::Personal**, **\Aurora\System\Enums\FileStorageType::Corporate**, **\Aurora\System\Enums\FileStorageType::Shared**.
      * @param string $sPath Path to the folder which contains the file, empty string means the file is in the root folder.
      * @param string $sFileName Filename.
      *
      * @return string
      */
-    public function getNonExistentFileName($iUserId, $iType, $sPath, $sFileName, $bWithoutGroup = false)
+    public function getNonExistentFileName($iUserId, $sType, $sPath, $sFileName, $bWithoutGroup = false)
     {
-        return $this->oStorage->getNonExistentFileName($iUserId, $iType, $sPath, $sFileName, $bWithoutGroup);
+        return $this->oStorage->getNonExistentFileName($iUserId, $sType, $sPath, $sFileName, $bWithoutGroup);
     }
 
     /**
