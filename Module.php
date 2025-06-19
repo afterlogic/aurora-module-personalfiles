@@ -703,18 +703,18 @@ class Module extends \Aurora\System\Module\AbstractModule
                 } else {
 
                     list($toPath, $toName) = \Sabre\Uri\split($originalPath);
+                    $toName = $this->getManager()->getNonExistentFileName(
+                        $sUserPiblicId,
+                        'personal',
+                        $toPath,
+                        $toName
+                    );
                     $fileItem = [
                         'FromPath' => '/' . self::$sTrashFolder,
                         'FromName' => $item,
                         'ToPath' => $toPath,
                         'ToName' => $toName,
                     ];
-                    $fileItem['Name'] = $this->getManager()->getNonExistentFileName(
-                        $sUserPiblicId,
-                        'personal',
-                        $fileItem['ToPath'],
-                        $fileItem['ToName']
-                    );
                     $Files[] = $fileItem;
                 }
             }
