@@ -16,7 +16,7 @@ if (PHP_SAPI !== 'cli') {
     exit("Use the console for running this script");
 }
 
-require_once \dirname(__file__) . "/../../system/autoload.php";
+require_once \dirname(__file__) . "../../../system/autoload.php";
 \Aurora\System\Api::Init(true);
 
 $offset = 0;
