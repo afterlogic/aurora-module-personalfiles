@@ -29,7 +29,7 @@ if ($usersCount > 0) {
         $users = CoreModule::Decorator()->GetUsers(0, $offset, $limit);
         if (count($users['Items']) > 0) {
             foreach ($users['Items'] as $user) {
-                $oTrash = Server::getNodeForPath(Constants::FILESTORAGE_PATH_ROOT . '/' . FileStorageType::Personal . '/' . self::$sTrashFolder, $user['PublicId']);
+                $oTrash = Server::getNodeForPath(Constants::FILESTORAGE_PATH_ROOT . '/' . FileStorageType::Personal . '/' . Module::$sTrashFolder, $user['PublicId']);
                 if ($oTrash instanceof \Afterlogic\Dav\FS\Directory) {
                     $children = $oTrash->getChildren();
                     foreach ($children as $child) {
