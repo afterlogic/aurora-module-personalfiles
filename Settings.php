@@ -37,6 +37,12 @@ class Settings extends \Aurora\System\Module\Settings
                 null,
                 "Setting to true show shared with me files in personal storage",
             ),
+            "TrashFilesLifetimeDays" => new SettingsProperty(
+                1,
+                "int",
+                null,
+                "The lifetime of files in days deleted from the Trash folder by the cron script.",
+            ),
         ];
     }
 }

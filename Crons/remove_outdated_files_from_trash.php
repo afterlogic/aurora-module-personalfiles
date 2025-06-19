@@ -21,7 +21,7 @@ require_once \dirname(__file__) . "../../../system/autoload.php";
 
 $offset = 0;
 $limit = 50;
-$period = 1; //Day
+$period = Module::getInstance()->getConfig('TrashFilesLifetimeDays', 1);
 
 $usersCount = CoreModule::Decorator()->GetTotalUsersCount();
 if ($usersCount > 0) {
