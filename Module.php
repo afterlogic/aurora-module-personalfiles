@@ -687,50 +687,58 @@ class Module extends \Aurora\System\Module\AbstractModule
      */
     public function onAfterRestore(&$aArgs, &$mResult)
     {
-        $UserId = $aArgs['UserId'];
-        $Items = $aArgs['Items'];
+        if (static::$sStorageType === \Aurora\System\Enums\FileStorageType::Personal) {
+            $UserId = $aArgs['UserId'];
+            $Items = $aArgs['Items'];
 
-        $sUserPiblicId = Api::getUserPublicIdById($UserId);
-        $Files = [];
-        foreach ($Items as $item) {
-            $oNode = Server::getNodeForPath(Constants::FILESTORAGE_PATH_ROOT . '/personal/' . self::$sTrashFolder . '/' . $item);
-            if ($oNode) {
-                $mExtendedProps = $oNode->getProperty('ExtendedProps');
-                $aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
-                $originalPath = isset($aExtendedProps['TrashOriginalPath']) ? $aExtendedProps['TrashOriginalPath'] : false;
-                if ($originalPath === false) {
-                    Api::Log('ERROR: The node \'' . $item .  '\' has no original path');
-                } else {
+            $sUserPiblicId = Api::getUserPublicIdById($UserId);
+            $Files = [];
+            foreach ($Items as $item) {
+                $oNode = Server::getNodeForPath(Constants::FILESTORAGE_PATH_ROOT . '/personal/' . self::$sTrashFolder . '/' . $item);
+                if ($oNode) {
+                    $mExtendedProps = $oNode->getProperty('ExtendedProps');
+                    $aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
+                    $originalPath = isset($aExtendedProps['TrashOriginalPath']) ? $aExtendedProps['TrashOriginalPath'] : false;
+                    if ($originalPath === false) {
+                        Api::Log('ERROR: The node \'' . $item .  '\' has no original path');
+                    } else {
 
-                    list($toPath, $toName) = \Sabre\Uri\split($originalPath);
-                    $toName = $this->getManager()->getNonExistentFileName(
-                        $sUserPiblicId,
-                        'personal',
-                        $toPath,
-                        $toName
-                    );
-                    $fileItem = [
-                        'FromPath' => '/' . self::$sTrashFolder,
-                        'FromName' => $item,
-                        'ToPath' => $toPath,
-                        'ToName' => $toName,
-                    ];
-                    $Files[] = $fileItem;
+                        list($toPath, $toOriginalName) = \Sabre\Uri\split($originalPath);
+                        $toName = $this->getManager()->getNonExistentFileName(
+                            $sUserPiblicId,
+                            'personal',
+                            $toPath,
+                            $toOriginalName
+                        );
+                        $fileItem = [
+                            'FromPath' => '/' . self::$sTrashFolder,
+                            'FromName' => $item,
+                            'ToPath' => $toPath,
+                            'ToName' => $toName,
+                            'ToOriginalName' => $toOriginalName
+                        ];
+                        $Files[] = $fileItem;
+                    }
                 }
             }
-        }
 
-        foreach ($Files as $aFileItem) {
-            $mResult = $this->getManager()->copy(
-                $sUserPiblicId,
-                'personal',
-                'personal',
-                $aFileItem['FromPath'],
-                $aFileItem['ToPath'],
-                $aFileItem['FromName'],
-                $aFileItem['ToName'],
-                true
-            );
+            if (is_array($Files)) {
+                $mResult = [];
+            }
+            foreach ($Files as $aFileItem) {
+                if ($this->getManager()->copy(
+                    $sUserPiblicId,
+                    'personal',
+                    'personal',
+                    $aFileItem['FromPath'],
+                    $aFileItem['ToPath'],
+                    $aFileItem['FromName'],
+                    $aFileItem['ToName'],
+                    true
+                )) {
+                    $mResult[$aFileItem['ToOriginalName']] = $aFileItem['ToName'];
+                }
+            }
         }
     }
 
