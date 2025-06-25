@@ -249,7 +249,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         return '/' . self::$sTrashFolder . \ltrim($sPath);
     }
 
-        /**
+    /**
      * @ignore
      * @param array $aArgs Arguments of event.
      * @param mixed $mResult Is passed by reference.
@@ -656,7 +656,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                             $mExtendedProps = $oNode->getProperty('ExtendedProps');
                             $aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
                             $aExtendedProps['TrashOriginalPath'] = $aItem['Path'] . '/' . $aItem['Name'];
-                
+
                             $oNode->setProperty('ExtendedProps', $aExtendedProps);
                         }
                     }
@@ -700,7 +700,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                     $aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
                     $originalPath = isset($aExtendedProps['TrashOriginalPath']) ? $aExtendedProps['TrashOriginalPath'] : false;
                     if ($originalPath === false) {
-                        Api::Log('ERROR: The node \'' . $item .  '\' has no original path');
+                        Api::Log('ERROR: The node \'' . $item . '\' has no original path');
                     } else {
 
                         list($toPath, $toOriginalName) = \Sabre\Uri\split($originalPath);

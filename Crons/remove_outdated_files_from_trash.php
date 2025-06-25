@@ -10,7 +10,7 @@ namespace Aurora\Modules\PersonalFiles;
 use Aurora\Modules\Core\Module as CoreModule;
 use Afterlogic\DAV\Server;
 use Afterlogic\DAV\Constants;
-use \Aurora\System\Enums\FileStorageType;
+use Aurora\System\Enums\FileStorageType;
 
 if (PHP_SAPI !== 'cli') {
     exit("Use the console for running this script");
@@ -30,7 +30,7 @@ if ($usersCount > 0) {
         if (count($users['Items']) > 0) {
             foreach ($users['Items'] as $user) {
                 $oTrash = Server::getNodeForPath(Constants::FILESTORAGE_PATH_ROOT . '/' . FileStorageType::Personal . '/' . Module::$sTrashFolder, $user['PublicId']);
-                if ($oTrash instanceof \Afterlogic\Dav\FS\Directory) {
+                if ($oTrash instanceof \Afterlogic\DAV\FS\Directory) {
                     $children = $oTrash->getChildren();
                     foreach ($children as $child) {
                         $lastModified = $child->getLastModified();
@@ -38,7 +38,7 @@ if ($usersCount > 0) {
                             $child->delete();
                         }
                     }
-                }   
+                }
             }
         }
         $offset += $limit;

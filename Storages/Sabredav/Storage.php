@@ -374,27 +374,27 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 
                 $sPath = 'files/' . $sType . '/' . trim($sPath, '/');
                 $oIterator = $oServer->getPropertiesIteratorForPath($sPath, [], -1);
-    
+
                 foreach ($oIterator as $iKey => $oItem) {
                     // Skipping the parent path
                     if ($iKey === 0) {
                         continue;
                     }
-    
+
                     $sHref = $oItem['href'];
                     // Skipping the parent path
                     if ($sHref === $sPath) {
                         continue;
                     }
                     list(, $sName) = \Sabre\Uri\split($sHref);
-    
+
                     if (fnmatch("*" . $sPattern . "*", $sName, FNM_CASEFOLD)) {
                         $oNode = Server::getNodeForPath($sHref);
-    
+
                         if ($oNode && !isset($aResult[$sHref])) {
                             $aHref = \explode('/', $sHref, 3);
                             list($sSubFullPath, ) = \Sabre\Uri\split($aHref[2]);
-    
+
                             $aResult[] = $this->getFileInfo($sUserPublicId, $sType, $oNode, $sPublicHash, '/' . trim($sSubFullPath, '/'));
                         }
                     }
