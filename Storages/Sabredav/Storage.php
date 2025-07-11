@@ -279,7 +279,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
         }
 
         if ($oNode instanceof File) {
-            $sResult = $oNode->get(false);
+            $sResult = $oNode->get();
         }
 
         return $sResult;
@@ -527,8 +527,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
         }
 
         if ($oDirectory instanceof Directory || $oDirectory instanceof \Afterlogic\DAV\FS\Shared\Root) {
-            $oDirectory->createFile($sFileName, $sData, $rangeType, $offset, $extendedProps);
-            return true;
+            $result = $oDirectory->createFile($sFileName, $sData, $rangeType, $offset, $extendedProps);
+            return $result !== null;
         }
 
         return false;
@@ -736,56 +736,57 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                     $oPdo->updateSharedFileSharePath(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $oItem->getName(), $sNewName, $sFromPath, $sToPath, $oItem->getGroupId());
                 } else {
                     if ($oItem instanceof File) {
-                        $oToDirectory->createFile(
-                            $sNewName,
-                            $oItem->get(false)
+                        $copyResult = Server::copyNode(
+                            'files/' . $sFromType . $sFromPath . '/' . $sName,
+                            'files/' . $sToType . $sToPath . '/' . $sNewName
                         );
+                        if ($copyResult) {
+                            /** @var \Afterlogic\DAV\FS\File $oItemNew */
+                            $oItemNew = $oToDirectory->getChild($sNewName);
 
-                        /** @var \Afterlogic\DAV\FS\File $oItemNew */
-                        $oItemNew = $oToDirectory->getChild($sNewName);
-
-                        if ($oItemNew && $bMove) {
-                            $oSharedFiles = \Aurora\Api::GetModule('SharedFiles');
-                            if ($oSharedFiles) {
-                                $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
-                                $oPdo->updateShare(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName, $sToType, $sToPath . '/' . $sNewName);
-                            }
-                            $oFiles = \Aurora\Api::GetModule('Files');
-                            if ($oFiles) {
-                                $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
-                                $iUserId = \Aurora\Api::getUserIdByPublicId($sUserPublicId);
-                                $oPdo->updateFavorite($iUserId, $sFromType, $sFromPath . '/' . $sName, $sToType, $sToPath . '/' . $sNewName);
-                            }
-                        }
-                        $aProps = $oItem->getProperties(array());
-                        if (!$bMove) {
-                            $aProps['Owner'] = $sUserPublicId;
-                        } else {
-                            $sChildPath = substr(dirname($oItem->getPath()), strlen($sFromRootPath));
-                            $sID = \Aurora\Modules\Min\Module::generateHashId([$sUserPublicId, $sFromType, $sChildPath, $oItem->getName()]);
-
-                            $sNewChildPath = substr(dirname($oItemNew->getPath()), strlen($sToRootPath));
-
-                            $mMin = $oMin->GetMinByID($sID);
-                            if (!empty($mMin['__hash__'])) {
-                                $sNewID = \Aurora\Modules\Min\Module::generateHashId([$sUserPublicId, $sToType, $sNewChildPath, $oItemNew->getName()]);
-
-                                $mMin['Path'] = $sNewChildPath;
-                                $mMin['Type'] = $sToType;
-                                $mMin['Name'] = $oItemNew->getName();
-
-                                $oMin->UpdateMinByID($sID, $mMin, $sNewID);
-                            }
-                        }
-                        $oItemNew->updateProperties($aProps);
-
-                        if (!isset($GLOBALS['__SKIP_HISTORY__'])) {
-                            try {
-                                $oHistoryNode = $oFromDirectory->getChild($sName . '.hist');
-                                if ($oHistoryNode instanceof Directory) {
-                                    $this->copy($sUserPublicId, $sFromType, $sToType, $sFromPath, $sToPath, $sName . '.hist', $sNewName . '.hist', false);
+                            if ($oItemNew && $bMove) {
+                                $oSharedFiles = \Aurora\Api::GetModule('SharedFiles');
+                                if ($oSharedFiles) {
+                                    $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
+                                    $oPdo->updateShare(Constants::PRINCIPALS_PREFIX . $sUserPublicId, $sFromType, $sFromPath . '/' . $sName, $sToType, $sToPath . '/' . $sNewName);
                                 }
-                            } catch (\Exception $oEx) {
+                                $oFiles = \Aurora\Api::GetModule('Files');
+                                if ($oFiles) {
+                                    $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
+                                    $iUserId = \Aurora\Api::getUserIdByPublicId($sUserPublicId);
+                                    $oPdo->updateFavorite($iUserId, $sFromType, $sFromPath . '/' . $sName, $sToType, $sToPath . '/' . $sNewName);
+                                }
+                            }
+                            $aProps = $oItem->getProperties(array());
+                            if (!$bMove) {
+                                $aProps['Owner'] = $sUserPublicId;
+                            } else {
+                                $sChildPath = substr(dirname($oItem->getPath()), strlen($sFromRootPath));
+                                $sID = \Aurora\Modules\Min\Module::generateHashId([$sUserPublicId, $sFromType, $sChildPath, $oItem->getName()]);
+
+                                $sNewChildPath = substr(dirname($oItemNew->getPath()), strlen($sToRootPath));
+
+                                $mMin = $oMin->GetMinByID($sID);
+                                if (!empty($mMin['__hash__'])) {
+                                    $sNewID = \Aurora\Modules\Min\Module::generateHashId([$sUserPublicId, $sToType, $sNewChildPath, $oItemNew->getName()]);
+
+                                    $mMin['Path'] = $sNewChildPath;
+                                    $mMin['Type'] = $sToType;
+                                    $mMin['Name'] = $oItemNew->getName();
+
+                                    $oMin->UpdateMinByID($sID, $mMin, $sNewID);
+                                }
+                            }
+                            $oItemNew->updateProperties($aProps);
+
+                            if (!isset($GLOBALS['__SKIP_HISTORY__'])) {
+                                try {
+                                    $oHistoryNode = $oFromDirectory->getChild($sName . '.hist');
+                                    if ($oHistoryNode instanceof Directory) {
+                                        $this->copy($sUserPublicId, $sFromType, $sToType, $sFromPath, $sToPath, $sName . '.hist', $sNewName . '.hist', false);
+                                    }
+                                } catch (\Exception $oEx) {
+                                }
                             }
                         }
                     }
@@ -841,7 +842,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                         }
                     }
                     if ($bMove) {
-                        Server::deleteNode('files/' . $sFromType . '/' . $sFromPath . '/' . $sName);
+                        Server::deleteNode('files/' . $sFromType . $sFromPath . '/' . $sName);
                     }
                 }
                 return true;

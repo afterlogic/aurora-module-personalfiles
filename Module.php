@@ -326,7 +326,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             Server::setUser($currentUser);
 
             self::Decorator()->UpdateUsedSpace();
-            return true;
+            return $mResult;
         }
     }
 
