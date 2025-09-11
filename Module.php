@@ -32,6 +32,8 @@ use Aurora\System\Exceptions\ApiException;
 class Module extends \Aurora\System\Module\AbstractModule
 {
     protected static $sStorageType = 'personal';
+    protected static $sTrashStorageType = 'trash';
+    protected static $sFavoritesStorageType = 'favorites';
     protected static $iStorageOrder = 0;
 
     /**
@@ -113,6 +115,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $this->subscribeEvent('Files::Rename::after', array($this, 'onAfterRename'));
         $this->subscribeEvent('Files::Delete::after', array($this, 'onAfterDelete'));
         $this->subscribeEvent('Files::Restore::after', array($this, 'onAfterRestore'));
+        $this->subscribeEvent('Files::GetQuota::before', array($this, 'onBeforeGetQuota'));
         $this->subscribeEvent('Files::GetQuota::after', array($this, 'onAfterGetQuota'));
         $this->subscribeEvent('Files::CreateLink::after', array($this, 'onAfterCreateLink'));
         $this->subscribeEvent('Files::CreatePublicLink::after', array($this, 'onAfterCreatePublicLink'));
@@ -256,7 +259,7 @@ class Module extends \Aurora\System\Module\AbstractModule
      */
     public function onBeforeGetItems(&$aArgs, &$mResult)
     {
-        if ($this->getConfig('AllowTrash', true) && $aArgs['Type'] === 'trash') {
+        if ($this->getConfig('AllowTrash', true) && $aArgs['Type'] === self::$sTrashStorageType) {
             $aArgs['Type'] = \Aurora\System\Enums\FileStorageType::Personal;
             $aArgs['Path'] = $this->getTrashPath($aArgs['Path']);
 
@@ -440,7 +443,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         if (FilesModule::getInstance()->getConfig('AllowTrash', true) && $this->checkStorageType(\Aurora\System\Enums\FileStorageType::Personal)) {
             array_unshift($mResult, [
-                'Type' => 'trash',
+                'Type' => self::$sTrashStorageType,
                 'DisplayName' => $this->i18N('LABEL_TRASH_STORAGE'),
                 'IsExternal' => false,
                 'Order' => 999,
@@ -449,7 +452,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
         if (FilesModule::getInstance()->getConfig('AllowFavorites', true) && $this->checkStorageType(\Aurora\System\Enums\FileStorageType::Personal)) {
             array_unshift($mResult, [
-                'Type' => 'favorites',
+                'Type' => self::$sFavoritesStorageType,
                 'DisplayName' => $this->i18N('LABEL_FAVORITES_STORAGE'),
                 'IsExternal' => false,
                 'Order' => 998,
@@ -871,6 +874,21 @@ class Module extends \Aurora\System\Module\AbstractModule
             $iSpaceLimitMb
         );
         return $iSpaceLimitMb;
+    }
+
+    /**
+     * @ignore
+     * @param array $aArgs Arguments of event.
+     * @param mixed $mResult Is passed by reference.
+     */
+    public function onBeforeGetQuota(&$aArgs, &$mResult)
+    {
+        if (
+            ($this->getConfig('AllowTrash', true) && $aArgs['Type'] === self::$sTrashStorageType) ||
+            ($this->getConfig('AllowFavorites', true) && $aArgs['Type'] === self::$sFavoritesStorageType)
+        ) {
+            $aArgs['Type'] = \Aurora\System\Enums\FileStorageType::Personal;
+        }
     }
 
     /**
