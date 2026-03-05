@@ -608,7 +608,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         if ($this->checkStorageType($aArgs['Type'])) {
             $mResult = false;
 
-            $sUserPiblicId = Api::getUserPublicIdById($UserId);
+            $sUserPublicId = Api::getUserPublicIdById($UserId);
             foreach ($aArgs['Items'] as $key => $aItem) {
                 try {
                     $oNode = Server::getNodeForPath(Constants::FILESTORAGE_PATH_ROOT . '/' . $aArgs['Type'] . '/' . $aItem['Path'] . '/' . $aItem['Name']);
@@ -637,14 +637,14 @@ class Module extends \Aurora\System\Module\AbstractModule
                         FilesModule::Decorator()->CreateFolder($aArgs['UserId'], \Aurora\System\Enums\FileStorageType::Personal, '', self::$sTrashFolder);
                     }
                     $sNewName = $this->getManager()->getNonExistentFileName(
-                        $sUserPiblicId,
+                        $sUserPublicId,
                         \Aurora\System\Enums\FileStorageType::Personal,
                         '/' . self::$sTrashFolder,
                         $aItem['Name']
                     );
                     $aArgs['Files'][$key]['NewName'] = $sNewName;
                     $mResult = $this->getManager()->copy(
-                        $sUserPiblicId,
+                        $sUserPublicId,
                         $aArgs['Type'],
                         \Aurora\System\Enums\FileStorageType::Personal,
                         $aItem['Path'],
@@ -694,7 +694,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $UserId = $aArgs['UserId'];
             $Items = $aArgs['Items'];
 
-            $sUserPiblicId = Api::getUserPublicIdById($UserId);
+            $sUserPublicId = Api::getUserPublicIdById($UserId);
             $Files = [];
             foreach ($Items as $item) {
                 $oNode = Server::getNodeForPath(Constants::FILESTORAGE_PATH_ROOT . '/personal/' . self::$sTrashFolder . '/' . $item);
@@ -708,7 +708,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
                         list($toPath, $toOriginalName) = \Sabre\Uri\split($originalPath);
                         $toName = $this->getManager()->getNonExistentFileName(
-                            $sUserPiblicId,
+                            $sUserPublicId,
                             'personal',
                             $toPath,
                             $toOriginalName
@@ -725,12 +725,10 @@ class Module extends \Aurora\System\Module\AbstractModule
                 }
             }
 
-            if (is_array($Files)) {
-                $mResult = [];
-            }
+            $mResult = [];
             foreach ($Files as $aFileItem) {
                 if ($this->getManager()->copy(
-                    $sUserPiblicId,
+                    $sUserPublicId,
                     'personal',
                     'personal',
                     $aFileItem['FromPath'],
