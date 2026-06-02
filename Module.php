@@ -143,7 +143,7 @@ class Module extends \Aurora\System\Module\AbstractModule
      */
     public function GetSettings()
     {
-        Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::Anonymous);
+        Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
         return array(
             'UserSpaceLimitMb' => $this->getUserSpaceLimitMb(),
