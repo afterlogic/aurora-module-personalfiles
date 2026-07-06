@@ -158,7 +158,27 @@ class Module extends \Aurora\System\Module\AbstractModule
 			
 			return true;
 		}
-	}	
+	}
+
+    /**
+     * Checks if file name is allowed.
+     *
+     * @param string $FileName
+     *
+     * @return bool
+     */
+    protected function isFileAllowed($FileName)
+    {
+        $forbiddenFileList = [
+            '.sabredav'
+        ];
+
+        $FileName = \trim(\MailSo\Base\Utils::ClearFileName($FileName));
+
+        $result = !in_array($FileName, $forbiddenFileList);
+
+        return  $result;
+    }
 	
 	/**
 	 * Creates file.
@@ -170,6 +190,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		if ($this->checkStorageType($aArgs['Type']))
 		{
+            if (!self::isFileAllowed($aArgs['Name'])) {
+                throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::CanNotUploadFileErrorData);
+            }
+
 			$Result = $this->oApiFilesManager->createFile(
 				\Aurora\System\Api::getUserPublicIdById(isset($aArgs['UserId']) ? $aArgs['UserId'] : null),
 				isset($aArgs['Type']) ? $aArgs['Type'] : null,
@@ -542,6 +566,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$bFolderIntoItself = $aItem['IsFolder'] && $aArgs['ToPath'] === $aItem['FromPath'].'/'.$aItem['Name'];
 				if (!$bFolderIntoItself)
 				{
+                    if (!self::IsFileAllowed(basename($aItem['Name']))) {
+                        throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::CanNotUploadFileErrorData);
+                    }
+
 					$mResult = $this->oApiFilesManager->move(
 						$sUserPiblicId, 
 						$aItem['FromType'], 
