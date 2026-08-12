@@ -445,6 +445,17 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
      */
     public function createFolder($iUserId, $sType, $sPath, $sFolderName)
     {
+        // Check for long folder names and truncate if necessary
+        // $maxLength = 255; // Maximum filename length in most filesystems
+        // if (strlen($sFolderName) > $maxLength) {
+        //     // Create hash of the name to keep it unique
+        //     $extension = '';
+        //     if (pathinfo($sFolderName, PATHINFO_EXTENSION)) {
+        //         $extension = '.' . pathinfo($sFolderName, PATHINFO_EXTENSION);
+        //     }
+        //     $sFolderName = substr(md5($sFolderName), 0, $maxLength - strlen($extension)) . $extension;
+        // }
+        
         $oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
 
         if ($oDirectory instanceof \Sabre\DAVACL\IACL) {
