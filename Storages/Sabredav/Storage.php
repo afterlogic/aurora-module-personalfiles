@@ -646,6 +646,32 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                         throw new ApiException(FilesErrorCodes::AlreadeExists);
                     }
                     $oNode->setName($sNewName);
+
+                    $iDbUserId = \Aurora\Api::getUserIdByPublicId($iUserId);
+                    $sOldFullPath = preg_replace('#/+#', '/', $sPath . '/' . $sName);
+                    $sOldFullPath = $sOldFullPath === '/' ? '' : rtrim($sOldFullPath, '/');
+                    $sNewFullPath = preg_replace('#/+#', '/', $sPath . '/' . $sNewName);
+                    $sNewFullPath = $sNewFullPath === '/' ? '' : rtrim($sNewFullPath, '/');
+                    $sOldPrefix = $sOldFullPath . '/';
+                    if ($oNode instanceof Directory) {
+                        $aFavorites = \Aurora\Modules\Files\Models\FavoriteFile::where('IdUser', $iDbUserId)
+                            ->where('Type', $sType)
+                            ->where('FullPath', 'like', $sOldPrefix . '%')
+                            ->get();
+                        foreach ($aFavorites as $favorite) {
+                            $favorite->FullPath = $sNewFullPath . substr($favorite->FullPath, strlen($sOldFullPath));
+                            $favorite->save();
+                        }
+                        // Also update exact match for the directory itself
+                        \Aurora\Modules\Files\Models\FavoriteFile::where('IdUser', $iDbUserId)
+                            ->where('Type', $sType)
+                            ->where('FullPath', $sOldFullPath)
+                            ->update(['FullPath' => $sNewFullPath]);
+                    } else {
+                        $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
+                        $oPdo->updateFavorite($iDbUserId, $sType, $sOldFullPath, $sType, $sNewFullPath);
+                    }
+
                     return true;
                 }
             } else {

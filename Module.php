@@ -18,6 +18,7 @@ use Aurora\Modules\Core\Module as CoreModule;
 use Aurora\Modules\Files\Classes\FileItem;
 use Aurora\Modules\Files\Enums\ErrorCodes;
 use Aurora\Modules\Files\Module as FilesModule;
+use Aurora\Modules\Files\Models\FavoriteFile;
 use Aurora\System\Exceptions\ApiException;
 
 /**
@@ -630,7 +631,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $aPathItems = preg_split('/' . preg_quote('/', '/') . '/', \trim($aItem['Path'], '/'));
                 $sFirstPath = isset($aPathItems[0]) ? $aPathItems[0] : '';
 
-                \Aurora\Modules\Files\Models\FavoriteFile::where('IdUser', $UserId)
+                FavoriteFile::where('IdUser', $UserId)
                     ->where('Type', $aArgs['Type'])
                     ->where('FullPath', $aItem['Path'] . '/' . $aItem['Name'])
                     ->delete();
@@ -769,6 +770,24 @@ class Module extends \Aurora\System\Module\AbstractModule
             //			$sNewName = $this->getManager()->getNonExistentFileName($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $sNewName);
             $bIsLink = isset($aArgs['IsLink']) ? $aArgs['IsLink'] : false;
             $mResult = $this->getManager()->rename($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Name'], $sNewName, $bIsLink);
+
+            $sOldFullPath = preg_replace('#/+#', '/', $aArgs['Path'] . '/' . $aArgs['Name']);
+            $sOldFullPath = $sOldFullPath === '/' ? '' : rtrim($sOldFullPath, '/');
+            $sNewFullPath = preg_replace('#/+#', '/', $aArgs['Path'] . '/' . $sNewName);
+            $sNewFullPath = $sNewFullPath === '/' ? '' : rtrim($sNewFullPath, '/');
+            $sOldPrefix = $sOldFullPath . '/';
+            FavoriteFile::where('IdUser', $UserId)
+                ->where('Type', $aArgs['Type'])
+                ->where('FullPath', $sOldFullPath)
+                ->update(['FullPath' => $sNewFullPath]);
+            $aFavorites = FavoriteFile::where('IdUser', $UserId)
+                ->where('Type', $aArgs['Type'])
+                ->where('FullPath', 'like', $sOldPrefix . '%')
+                ->get();
+            foreach ($aFavorites as $favorite) {
+                $favorite->FullPath = $sNewFullPath . substr($favorite->FullPath, strlen($sOldFullPath));
+                $favorite->save();
+            }
         }
     }
 
@@ -838,6 +857,26 @@ class Module extends \Aurora\System\Module\AbstractModule
                         $sNewName
                     );
                     $aArgs['Files'][$key]['NewName'] = $sNewName;
+
+                    $sOldFullPath = preg_replace('#/+#', '/', $aItem['FromPath'] . '/' . $aItem['Name']);
+                    $sOldFullPath = $sOldFullPath === '/' ? '' : rtrim($sOldFullPath, '/');
+                    $sNewFullPath = preg_replace('#/+#', '/', $aArgs['ToPath'] . '/' . $sNewName);
+                    $sNewFullPath = $sNewFullPath === '/' ? '' : rtrim($sNewFullPath, '/');
+                    $sOldPrefix = $sOldFullPath . '/';
+                    FavoriteFile::where('IdUser', $UserId)
+                        ->where('Type', $aItem['FromType'])
+                        ->where('FullPath', $sOldFullPath)
+                        ->update(['Type' => $aArgs['ToType'], 'FullPath' => $sNewFullPath]);
+                    $aFavorites = FavoriteFile::where('IdUser', $UserId)
+                        ->where('Type', $aItem['FromType'])
+                        ->where('FullPath', 'like', $sOldPrefix . '%')
+                        ->get();
+                    foreach ($aFavorites as $favorite) {
+                        $favorite->Type = $aArgs['ToType'];
+                        $favorite->FullPath = $sNewFullPath . substr($favorite->FullPath, strlen($sOldFullPath));
+                        $favorite->save();
+                    }
+
                     $mResult = $this->getManager()->copy(
                         $sUserPiblicId,
                         $aItem['FromType'],
