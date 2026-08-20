@@ -630,6 +630,11 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $aPathItems = preg_split('/' . preg_quote('/', '/') . '/', \trim($aItem['Path'], '/'));
                 $sFirstPath = isset($aPathItems[0]) ? $aPathItems[0] : '';
 
+                \Aurora\Modules\Files\Models\FavoriteFile::where('IdUser', $UserId)
+                    ->where('Type', $aArgs['Type'])
+                    ->where('FullPath', $aItem['Path'] . '/' . $aItem['Name'])
+                    ->delete();
+
                 if ($this->getConfig('AllowTrash', true) && $sFirstPath !== self::$sTrashFolder) {
                     $oNode->deleteShares();
 
