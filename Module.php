@@ -665,6 +665,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                             $mExtendedProps = $oNode->getProperty('ExtendedProps');
                             $aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
                             $aExtendedProps['TrashOriginalPath'] = $aItem['Path'] . '/' . $aItem['Name'];
+                            $aExtendedProps['TrashOriginalType'] = $aArgs['Type'];
 
                             $oNode->setProperty('ExtendedProps', $aExtendedProps);
                         }
@@ -708,6 +709,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                     $mExtendedProps = $oNode->getProperty('ExtendedProps');
                     $aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
                     $originalPath = isset($aExtendedProps['TrashOriginalPath']) ? $aExtendedProps['TrashOriginalPath'] : false;
+                    $originalType = isset($aExtendedProps['TrashOriginalType']) ? $aExtendedProps['TrashOriginalType'] : \Aurora\System\Enums\FileStorageType::Personal;
                     if ($originalPath === false) {
                         Api::Log('ERROR: The node \'' . $item . '\' has no original path');
                     } else {
@@ -715,7 +717,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                         list($toPath, $toOriginalName) = \Sabre\Uri\split($originalPath);
                         $toName = $this->getManager()->getNonExistentFileName(
                             $sUserPublicId,
-                            'personal',
+                            $originalType,
                             $toPath,
                             $toOriginalName
                         );
@@ -724,7 +726,8 @@ class Module extends \Aurora\System\Module\AbstractModule
                             'FromName' => $item,
                             'ToPath' => $toPath,
                             'ToName' => $toName,
-                            'ToOriginalName' => $toOriginalName
+                            'ToOriginalName' => $toOriginalName,
+                            'ToType' => $originalType
                         ];
                         $Files[] = $fileItem;
                     }
@@ -736,7 +739,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 if ($this->getManager()->copy(
                     $sUserPublicId,
                     'personal',
-                    'personal',
+                    $aFileItem['ToType'],
                     $aFileItem['FromPath'],
                     $aFileItem['ToPath'],
                     $aFileItem['FromName'],
