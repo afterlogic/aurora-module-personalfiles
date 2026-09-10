@@ -738,7 +738,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                     $aFileItem['ToName'],
                     true
                 )) {
-                     $mResult[] = $aFileItem;
+                    $mResult[] = $aFileItem;
                 }
             }
         }
