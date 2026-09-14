@@ -657,7 +657,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                             $mExtendedProps = $oNode->getProperty('ExtendedProps');
                             $aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
                             $aExtendedProps['TrashOriginalPath'] = $aItem['Path'] . '/' . $aItem['Name'];
-                            $aExtendedProps['TrashOriginalType'] = $aArgs['Type'];
+                            $aExtendedProps['TrashOriginalType'] = $aArgs['Type'] ?? \Aurora\System\Enums\FileStorageType::Personal;
 
                             $oNode->setProperty('ExtendedProps', $aExtendedProps);
                         }
