@@ -291,9 +291,7 @@ class Manager extends \Aurora\System\Managers\AbstractManagerWithStorage
      */
     public function move($iUserId, $iFromType, $iToType, $sFromPath, $sToPath, $sName, $sNewName)
     {
-        $GLOBALS['__FILESTORAGE_MOVE_ACTION__'] = true;
         $bResult = $this->oStorage->copy($iUserId, $iFromType, $iToType, $sFromPath, $sToPath, $sName, $sNewName, true);
-        $GLOBALS['__FILESTORAGE_MOVE_ACTION__'] = false;
         return $bResult;
     }
 
