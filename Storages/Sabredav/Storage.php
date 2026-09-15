@@ -35,6 +35,15 @@ use function Sabre\Event\Loop\instance;
 class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
 {
     /**
+     * Pattern search (getFiles()) walks the directory tree via a PROPFIND with
+     * Depth: infinity, which is O(total files) with no bound. Cap how deep it
+     * recurses and how many matches it collects so a huge/deeply-nested tree
+     * can't tie up a request indefinitely.
+     */
+    protected const SEARCH_MAX_DEPTH = 10;
+    protected const SEARCH_MAX_RESULTS = 500;
+
+    /**
      * @param string $sUserPublicId
      * @param string $sType
      * @param bool $bUser
@@ -373,12 +382,19 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                 $oServer->enablePropfindDepthInfinity = true;
 
                 $sPath = 'files/' . $sType . '/' . trim($sPath, '/');
-                $oIterator = $oServer->getPropertiesIteratorForPath($sPath, [], -1);
+                $oIterator = $oServer->getPropertiesIteratorForPath($sPath, [], self::SEARCH_MAX_DEPTH);
 
                 foreach ($oIterator as $iKey => $oItem) {
                     // Skipping the parent path
                     if ($iKey === 0) {
                         continue;
+                    }
+
+                    if (count($aResult) >= self::SEARCH_MAX_RESULTS) {
+                        // Stop walking the tree once we have enough matches - $oIterator is a
+                        // lazy generator, so breaking here actually cuts the recursion short
+                        // instead of just discarding items after the fact.
+                        break;
                     }
 
                     $sHref = $oItem['href'];
