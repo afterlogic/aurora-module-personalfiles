@@ -592,6 +592,29 @@ class Module extends \Aurora\System\Module\AbstractModule
     }
 
     /**
+     * Tells whether a link's URL scheme is safe to store and later open. A naive prefix
+     * check (e.g. substr === 'javascript:') is bypassable: browsers strip ASCII tab/CR/LF
+     * from anywhere in a URL before parsing it (so "ja\tvascript:" still executes), and it
+     * only ever covered one specific scheme, leaving data:/vbscript:/etc. wide open. Normalize
+     * the same way a browser would and check the scheme against an allowlist instead.
+     *
+     * @param string $Link
+     * @return bool
+     */
+    protected function isLinkSchemeAllowed($Link)
+    {
+        $sNormalized = \trim(\preg_replace('/[\x00-\x1F]/', '', (string) $Link));
+
+        $sScheme = \parse_url($sNormalized, PHP_URL_SCHEME);
+        if ($sScheme === null || $sScheme === false) {
+            // No scheme - a relative/schemeless link, safe to store as-is.
+            return true;
+        }
+
+        return \in_array(\strtolower($sScheme), ['http', 'https', 'ftp', 'mailto'], true);
+    }
+
+    /**
      * @ignore
      * @param array $aArgs Arguments of event.
      * @param mixed $mResult Is passed by reference.
@@ -609,8 +632,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             Api::CheckAccess($UserId);
 
-            if (substr($Link, 0, 11) === 'javascript:') {
-                $Link = substr($Link, 11);
+            if (!$this->isLinkSchemeAllowed($Link)) {
+                throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::InvalidInputParameter);
             }
 
             $sUserPiblicId = Api::getUserPublicIdById($UserId);
