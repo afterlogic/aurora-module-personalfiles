@@ -194,26 +194,59 @@ class Module extends \Aurora\System\Module\AbstractModule
     }
 
     /**
+     * Tells whether a user-submitted URL is safe to fetch server-side: http(s) only, and
+     * resolving to a public (non-private, non-reserved) IP address. Guards against SSRF via
+     * dangerous schemes (file://, gopher://, ...) or requests to internal/link-local network
+     * targets (e.g. cloud metadata endpoints, LAN services).
+     *
+     * @param string $sUrl
+     * @return bool
+     */
+    protected function isUrlSafeToFetch($sUrl)
+    {
+        $aParts = \parse_url((string) $sUrl);
+        if (!isset($aParts['scheme'], $aParts['host']) || !\in_array(\strtolower($aParts['scheme']), ['http', 'https'], true)) {
+            return false;
+        }
+
+        $sHost = $aParts['host'];
+        if (\filter_var($sHost, FILTER_VALIDATE_IP)) {
+            $sIp = $sHost;
+        } else {
+            $sIp = \gethostbyname($sHost);
+            if ($sIp === $sHost) {
+                // Could not resolve the host.
+                return false;
+            }
+        }
+
+        return (bool) \filter_var($sIp, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+    }
+
+    /**
      * Returns HTML title for specified URL.
      * @param string $sUrl
      * @return string
      */
     protected function getHtmlTitle($sUrl)
     {
+        if (!$this->isUrlSafeToFetch($sUrl)) {
+            return '';
+        }
+
         $oCurl = curl_init();
         \curl_setopt_array($oCurl, array(
             CURLOPT_URL => $sUrl,
-            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_FOLLOWLOCATION => false, // avoid redirect-based SSRF bypass of the checks above
+            CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
             CURLOPT_ENCODING => '',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_AUTOREFERER => true,
-            CURLOPT_SSL_VERIFYPEER => false, //required for https urls
+            CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_CONNECTTIMEOUT => 5,
             CURLOPT_TIMEOUT => 5,
-            CURLOPT_MAXREDIRS => 5
         ));
         $sContent = curl_exec($oCurl);
-        //$aInfo = curl_getinfo($oCurl);
         curl_close($oCurl);
 
         preg_match('/<title>(.*?)<\/title>/s', $sContent, $aTitle);
@@ -348,7 +381,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         if ($iUserId) {
             if (!empty($aArgs['Url'])) {
                 $sUrl = $aArgs['Url'];
-                if ($sUrl) {
+                if ($sUrl && $this->isUrlSafeToFetch($sUrl)) {
                     $aRemoteFileInfo = \Aurora\System\Utils::GetRemoteFileInfo($sUrl);
                     if ((int)$aRemoteFileInfo['code'] > 0) {
                         $sFileName = basename($sUrl);
