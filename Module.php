@@ -230,8 +230,24 @@ class Module extends \Aurora\System\Module\AbstractModule
      */
     protected function getHtmlTitle($sUrl)
     {
+        return $this->getHtmlTitleAndInfo($sUrl)['title'];
+    }
+
+    /**
+     * Fetches $sUrl once and returns both its HTML <title> and the same size/code info
+     * GetRemoteFileInfo() would report -- used when the URL is already known to be HTML (from
+     * its own extension), so onCheckUrl() doesn't need a separate metadata-only probe before
+     * the full GET it was going to make anyway to read the title.
+     *
+     * @param string $sUrl
+     * @return array{title: string, size: int, code: int}
+     */
+    protected function getHtmlTitleAndInfo($sUrl)
+    {
+        $aResult = ['title' => '', 'size' => 0, 'code' => 0];
+
         if (!$this->isUrlSafeToFetch($sUrl)) {
-            return '';
+            return $aResult;
         }
 
         $oCurl = curl_init();
@@ -247,10 +263,22 @@ class Module extends \Aurora\System\Module\AbstractModule
             CURLOPT_TIMEOUT => 5,
         ));
         $sContent = curl_exec($oCurl);
+        $aInfo = curl_getinfo($oCurl);
         curl_close($oCurl);
 
-        preg_match('/<title>(.*?)<\/title>/s', $sContent, $aTitle);
-        return isset($aTitle['1']) ? trim($aTitle['1']) : '';
+        if ($aInfo) {
+            $aResult['code'] = (int) ($aInfo['http_code'] ?? 0);
+            $aResult['size'] = isset($aInfo['download_content_length']) && $aInfo['download_content_length'] > 0
+                ? (int) $aInfo['download_content_length']
+                : (\is_string($sContent) ? \strlen($sContent) : 0);
+        }
+
+        if (\is_string($sContent)) {
+            preg_match('/<title>(.*?)<\/title>/s', $sContent, $aTitle);
+            $aResult['title'] = isset($aTitle[1]) ? trim($aTitle[1]) : '';
+        }
+
+        return $aResult;
     }
 
     /**
@@ -392,22 +420,37 @@ class Module extends \Aurora\System\Module\AbstractModule
             if (!empty($aArgs['Url'])) {
                 $sUrl = $aArgs['Url'];
                 if ($sUrl && $this->isUrlSafeToFetch($sUrl)) {
-                    $aRemoteFileInfo = \Aurora\System\Utils::GetRemoteFileInfo($sUrl);
-                    if ((int)$aRemoteFileInfo['code'] > 0) {
-                        $sFileName = basename($sUrl);
-                        $sFileExtension = \Aurora\System\Utils::GetFileExtension($sFileName);
+                    $sFileName = basename($sUrl);
+                    $sFileExtension = \Aurora\System\Utils::GetFileExtension($sFileName);
 
-                        if (empty($sFileExtension)) {
-                            $sFileExtension = \Aurora\System\Utils::GetFileExtensionFromMimeContentType($aRemoteFileInfo['content-type']);
-                            $sFileName .= '.' . $sFileExtension;
+                    if ($sFileExtension === 'htm' || $sFileExtension === 'html') {
+                        // Already known to be HTML from the URL itself -- fetch title and
+                        // size/code together in the one full GET this needs anyway, instead of
+                        // a metadata-only probe followed by a second full GET for the title.
+                        $aHtmlInfo = $this->getHtmlTitleAndInfo($sUrl);
+                        if ($aHtmlInfo['code'] > 0) {
+                            $mResult['Name'] = strlen($aHtmlInfo['title']) > 0 ? $aHtmlInfo['title'] : urldecode($sFileName);
+                            $mResult['Size'] = $aHtmlInfo['size'];
                         }
+                    } else {
+                        $aRemoteFileInfo = \Aurora\System\Utils::GetRemoteFileInfo($sUrl);
+                        if ((int)$aRemoteFileInfo['code'] > 0) {
+                            if (empty($sFileExtension)) {
+                                $sFileExtension = \Aurora\System\Utils::GetFileExtensionFromMimeContentType($aRemoteFileInfo['content-type']);
+                                $sFileName .= '.' . $sFileExtension;
 
-                        if ($sFileExtension === 'htm' || $sFileExtension === 'html') {
-                            $sTitle = $this->getHtmlTitle($sUrl);
+                                if ($sFileExtension === 'htm' || $sFileExtension === 'html') {
+                                    // The extension only became known from content-type, so
+                                    // there was no way to have skipped the metadata-only probe
+                                    // above without doing a full GET for every non-HTML URL too
+                                    // -- this remaining case still needs a second request.
+                                    $sTitle = $this->getHtmlTitle($sUrl);
+                                }
+                            }
+
+                            $mResult['Name'] = isset($sTitle) && strlen($sTitle) > 0 ? $sTitle : urldecode($sFileName);
+                            $mResult['Size'] = $aRemoteFileInfo['size'];
                         }
-
-                        $mResult['Name'] = isset($sTitle) && strlen($sTitle) > 0 ? $sTitle : urldecode($sFileName);
-                        $mResult['Size'] = $aRemoteFileInfo['size'];
                     }
                 }
             }
