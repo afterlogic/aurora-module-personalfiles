@@ -710,19 +710,28 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                     $sNewFullPath = $sNewFullPath === '/' ? '' : rtrim($sNewFullPath, '/');
                     $sOldPrefix = $sOldFullPath . '/';
                     if ($oNode instanceof Directory) {
-                        $aFavorites = \Aurora\Modules\Files\Models\FavoriteFile::where('IdUser', $iDbUserId)
-                            ->where('Type', $sType)
-                            ->where('FullPath', 'like', $sOldPrefix . '%')
-                            ->get();
-                        foreach ($aFavorites as $favorite) {
-                            $favorite->FullPath = $sNewFullPath . substr($favorite->FullPath, strlen($sOldFullPath));
-                            $favorite->save();
-                        }
-                        // Also update exact match for the directory itself
+                        // Renaming a folder can touch many favorites underneath it (plus the
+                        // folder's own favorite entry, if any). Instead of fetching every row
+                        // and calling save() on each one (one UPDATE per row), rewrite the
+                        // FullPath prefix for all of them in a single UPDATE: the connection's
+                        // PDO::quote() safely embeds the new prefix as a SQL string literal
+                        // (it isn't a bound placeholder, but it IS properly escaped for the
+                        // target charset, same guarantee a placeholder would give here), and
+                        // SUBSTRING() on the exact-match row (nothing left after the prefix)
+                        // returns '', so CONCAT() reduces to just the new prefix for that row.
+                        $oConnection = (new \Aurora\Modules\Files\Models\FavoriteFile())->getConnection();
+                        $sQuotedNewFullPath = $oConnection->getPdo()->quote($sNewFullPath);
+                        $iRemainderStart = strlen($sOldFullPath) + 1;
+
                         \Aurora\Modules\Files\Models\FavoriteFile::where('IdUser', $iDbUserId)
                             ->where('Type', $sType)
-                            ->where('FullPath', $sOldFullPath)
-                            ->update(['FullPath' => $sNewFullPath]);
+                            ->where(function ($oQuery) use ($sOldPrefix, $sOldFullPath) {
+                                $oQuery->where('FullPath', 'like', $sOldPrefix . '%')
+                                    ->orWhere('FullPath', $sOldFullPath);
+                            })
+                            ->update([
+                                'FullPath' => $oConnection->raw('CONCAT(' . $sQuotedNewFullPath . ', SUBSTRING(FullPath, ' . $iRemainderStart . '))'),
+                            ]);
                     } else {
                         $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
                         $oPdo->updateFavorite($iDbUserId, $sType, $sOldFullPath, $sType, $sNewFullPath);
