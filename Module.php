@@ -263,12 +263,22 @@ class Module extends \Aurora\System\Module\AbstractModule
     protected function isFileAllowed($FileName)
     {
         $forbiddenFileList = [
-            '.sabredav'
+            '.sabredav',
+            '.htaccess',
+            '.htpasswd',
+            '.env',
+            '.git',
+            '.svn',
+            'web.config',
+            'php.ini',
+            '.user.ini',
         ];
 
         $FileName = \trim(\MailSo\Base\Utils::ClearFileName($FileName));
 
-        $result = !in_array($FileName, $forbiddenFileList);
+        // Case-insensitive so e.g. ".HTACCESS" can't slip past the list on a
+        // case-insensitive filesystem/web server.
+        $result = !in_array(\strtolower($FileName), $forbiddenFileList);
 
         return  $result;
     }
