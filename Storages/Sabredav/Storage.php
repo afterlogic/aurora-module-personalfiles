@@ -44,6 +44,23 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
     protected const SEARCH_MAX_RESULTS = 500;
 
     /**
+     * A file/folder name must be a single path segment. \Afterlogic\DAV\FS\Directory::getChild()
+     * (and the createFile()/createDirectory() calls that go through it) only reject a name that
+     * is EXACTLY "." or ".." and otherwise concatenate it onto the node's filesystem path as-is,
+     * so a name like "../../etc/cron.d/evil" would resolve outside the user's storage root.
+     * Reject slashes, backslashes and null bytes up front so that string can never reach them.
+     *
+     * @param string $sName
+     * @throws ApiException
+     */
+    protected function assertSafeName($sName)
+    {
+        if (!is_string($sName) || $sName === '' || $sName === '.' || $sName === '..' || strpbrk($sName, "/\\\0") !== false) {
+            throw new ApiException(FilesErrorCodes::NotPermitted);
+        }
+    }
+
+    /**
      * @param string $sUserPublicId
      * @param string $sType
      * @param bool $bUser
@@ -105,6 +122,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
      */
     public function isFileExists($iUserId, $sType, $sPath, $sName, $bWithoutGroup = false)
     {
+        $this->assertSafeName($sName);
+
         $bResult = false;
         $oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
         if ($oDirectory instanceof Directory && $oDirectory->childExists($sName)) {
@@ -481,6 +500,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
         if ($oDirectory instanceof Directory) {
             $aFolderNames = \explode("/", trim($sFolderName, "/"), 2);
             if (isset($aFolderNames[0])) {
+                $this->assertSafeName($aFolderNames[0]);
                 if (!$oDirectory->childExists($aFolderNames[0])) {
                     $oDirectory->createDirectory($aFolderNames[0]);
                 } else {
@@ -510,6 +530,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
      */
     public function createLink($iUserId, $sType, $sPath, $sLink, $sName)
     {
+        $this->assertSafeName($sName);
+
         $oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
 
         if ($oDirectory instanceof Directory) {
@@ -541,6 +563,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
      */
     public function createFile($iUserId, $sType, $sPath, $sFileName, $sData, $rangeType, $offset, $extendedProps = [])
     {
+        $this->assertSafeName($sFileName);
+
         $oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
 
         if ($oDirectory instanceof \Sabre\DAVACL\IACL && $oDirectory instanceof Directory) {
@@ -571,6 +595,8 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
      */
     public function delete($iUserId, $sType, $sPath, $sName)
     {
+        $this->assertSafeName($sName);
+
         $sNodePath = 'files/' . $sType . $sPath . '/' . $sName;
         $oItem = Server::getNodeForPath($sNodePath, $iUserId);
         if ($oItem instanceof Node) {
@@ -649,6 +675,9 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
      */
     public function rename($iUserId, $sType, $sPath, $sName, $sNewName)
     {
+        $this->assertSafeName($sName);
+        $this->assertSafeName($sNewName);
+
         $oNode = Server::getNodeForPath('files/' . $sType . $sPath . '/' . $sName, $iUserId);
         if ($oNode) {
             if ($oNode->getName() !== $sNewName) {
@@ -720,6 +749,9 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
      */
     public function renameLink($iUserId, $sType, $sPath, $sName, $sNewName)
     {
+        $this->assertSafeName($sName);
+        $this->assertSafeName($sNewName);
+
         $oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
         /** @var \Afterlogic\DAV\FS\File|Directory $oItem */
         $oItem = $oDirectory->getChild($sName);
@@ -745,11 +777,15 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
      */
     public function copy($sUserPublicId, $sFromType, $sToType, $sFromPath, $sToPath, $sName, $sNewName, $bMove = false)
     {
+        $this->assertSafeName($sName);
+
         $oMin = \Aurora\Modules\Min\Module::getInstance();
 
         if (empty($sNewName) && !is_numeric($sNewName)) {
             $sNewName = $sName;
         }
+
+        $this->assertSafeName($sNewName);
 
         $sFromRootPath = $this->getRootPath($sUserPublicId, $sFromType, true);
         $sToRootPath = $this->getRootPath($sUserPublicId, $sToType, true);
