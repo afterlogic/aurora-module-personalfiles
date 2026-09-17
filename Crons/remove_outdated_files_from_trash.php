@@ -29,6 +29,15 @@ if ($usersCount > 0) {
         $users = CoreModule::Decorator()->GetUsers(0, $offset, $limit);
         if (count($users['Items']) > 0) {
             foreach ($users['Items'] as $user) {
+                // Server::getNodeForPath()+getChildren() sets up ACL/tenant/property machinery
+                // for every user on every run, even though most users' trash is empty most of
+                // the time. A plain filesystem check first skips all of that for that common case.
+                $sTrashPath = \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT
+                    . Constants::FILESTORAGE_PATH_PERSONAL . '/' . $user['UUID'] . '/' . Module::$sTrashFolder;
+                if (!is_dir($sTrashPath) || !(new \FilesystemIterator($sTrashPath, \FilesystemIterator::SKIP_DOTS))->valid()) {
+                    continue;
+                }
+
                 $oTrash = Server::getNodeForPath(Constants::FILESTORAGE_PATH_ROOT . '/' . FileStorageType::Personal . '/' . Module::$sTrashFolder, $user['PublicId']);
                 if ($oTrash instanceof \Afterlogic\DAV\FS\Directory) {
                     $children = $oTrash->getChildren();
