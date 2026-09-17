@@ -209,7 +209,11 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                         $mFileData = stream_get_contents($mFileData);
                     }
                     $aUrlFileInfo = \Aurora\System\Utils::parseIniString($mFileData);
-                    if ($aUrlFileInfo && isset($aUrlFileInfo['URL'])) {
+                    // A .url file's contents are attacker-controlled (anyone can upload one),
+                    // so a URL scheme like "javascript:" here would otherwise be handed straight
+                    // to the client as an "open" action -- the same class of stored-XSS this
+                    // module already blocks at link-creation time in onAfterCreateLink().
+                    if ($aUrlFileInfo && isset($aUrlFileInfo['URL']) && \Aurora\Modules\PersonalFiles\Module::isLinkSchemeAllowed($aUrlFileInfo['URL'])) {
                         $oResult->IsLink = true;
                         $oResult->LinkUrl = $aUrlFileInfo['URL'];
 

@@ -611,7 +611,7 @@ class Module extends \Aurora\System\Module\AbstractModule
      * @param string $Link
      * @return bool
      */
-    protected function isLinkSchemeAllowed($Link)
+    public static function isLinkSchemeAllowed($Link)
     {
         $sNormalized = \trim(\preg_replace('/[\x00-\x1F]/', '', (string) $Link));
 
