@@ -264,7 +264,6 @@ class Module extends \Aurora\System\Module\AbstractModule
         ));
         $sContent = curl_exec($oCurl);
         $aInfo = curl_getinfo($oCurl);
-        curl_close($oCurl);
 
         if ($aInfo) {
             $aResult['code'] = (int) ($aInfo['http_code'] ?? 0);
