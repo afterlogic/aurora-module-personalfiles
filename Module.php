@@ -194,19 +194,24 @@ class Module extends \Aurora\System\Module\AbstractModule
     }
 
     /**
-     * Tells whether a user-submitted URL is safe to fetch server-side: http(s) only, and
-     * resolving to a public (non-private, non-reserved) IP address. Guards against SSRF via
-     * dangerous schemes (file://, gopher://, ...) or requests to internal/link-local network
-     * targets (e.g. cloud metadata endpoints, LAN services).
+     * Resolves a user-submitted URL's host to a single IP and validates it's safe to fetch:
+     * http(s) only, and a public (non-private, non-reserved) IP address. Guards against SSRF
+     * via dangerous schemes (file://, gopher://, ...) or requests to internal/link-local
+     * network targets (e.g. cloud metadata endpoints, LAN services).
+     *
+     * Returns the resolved IP so the caller can pin curl to it (see pinCurlToResolvedHost())
+     * instead of letting curl resolve the host again at connect time -- resolving twice would
+     * let an attacker who controls the host's DNS answer safely for this check and then point
+     * at an internal address for the actual request (DNS rebinding).
      *
      * @param string $sUrl
-     * @return bool
+     * @return string|null The resolved IP, or null if the URL isn't safe to fetch.
      */
-    protected function isUrlSafeToFetch($sUrl)
+    protected function resolveSafeIp($sUrl)
     {
         $aParts = \parse_url((string) $sUrl);
         if (!isset($aParts['scheme'], $aParts['host']) || !\in_array(\strtolower($aParts['scheme']), ['http', 'https'], true)) {
-            return false;
+            return null;
         }
 
         $sHost = $aParts['host'];
@@ -216,11 +221,43 @@ class Module extends \Aurora\System\Module\AbstractModule
             $sIp = \gethostbyname($sHost);
             if ($sIp === $sHost) {
                 // Could not resolve the host.
-                return false;
+                return null;
             }
         }
 
-        return (bool) \filter_var($sIp, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+        return \filter_var($sIp, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) ? $sIp : null;
+    }
+
+    /**
+     * Tells whether a user-submitted URL is safe to fetch server-side. See resolveSafeIp().
+     *
+     * @param string $sUrl
+     * @return bool
+     */
+    protected function isUrlSafeToFetch($sUrl)
+    {
+        return $this->resolveSafeIp($sUrl) !== null;
+    }
+
+    /**
+     * Pins a curl handle to $sIp for $sUrl's host via CURLOPT_RESOLVE, so curl connects to
+     * exactly the address that was validated by resolveSafeIp() instead of resolving the host
+     * again itself. The Host header, TLS SNI and certificate check still use the original
+     * hostname, so this doesn't affect HTTPS validation.
+     *
+     * @param \CurlHandle|resource $oCurl
+     * @param string $sUrl
+     * @param string $sIp
+     * @return void
+     */
+    protected function pinCurlToResolvedHost($oCurl, $sUrl, $sIp)
+    {
+        $aParts = \parse_url((string) $sUrl);
+        $sHost = $aParts['host'] ?? '';
+        $iPort = $aParts['port'] ?? (\strtolower($aParts['scheme'] ?? '') === 'https' ? 443 : 80);
+        $sTarget = false !== \strpos($sIp, ':') ? '[' . $sIp . ']' : $sIp; // bracket IPv6 addresses
+
+        \curl_setopt($oCurl, CURLOPT_RESOLVE, [$sHost . ':' . $iPort . ':' . $sTarget]);
     }
 
     /**
@@ -246,7 +283,8 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         $aResult = ['title' => '', 'size' => 0, 'code' => 0];
 
-        if (!$this->isUrlSafeToFetch($sUrl)) {
+        $sIp = $this->resolveSafeIp($sUrl);
+        if ($sIp === null) {
             return $aResult;
         }
 
@@ -262,6 +300,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             CURLOPT_CONNECTTIMEOUT => 5,
             CURLOPT_TIMEOUT => 5,
         ));
+        $this->pinCurlToResolvedHost($oCurl, $sUrl, $sIp);
         $sContent = curl_exec($oCurl);
         $aInfo = curl_getinfo($oCurl);
 
