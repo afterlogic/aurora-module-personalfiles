@@ -770,9 +770,14 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $aPathItems = preg_split('/' . preg_quote('/', '/') . '/', \trim($aItem['Path'], '/'));
                 $sFirstPath = isset($aPathItems[0]) ? $aPathItems[0] : '';
 
+                // The item and everything inside it (if it's a folder) are removed from favorites
+                $sFullPath = preg_replace('#/+#', '/', $aItem['Path'] . '/' . $aItem['Name']);
                 FavoriteFile::where('IdUser', $UserId)
                     ->where('Type', $aArgs['Type'])
-                    ->where('FullPath', $aItem['Path'] . '/' . $aItem['Name'])
+                    ->where(function ($oQuery) use ($sFullPath) {
+                        $oQuery->where('FullPath', $sFullPath)
+                            ->orWhere('FullPath', 'like', addcslashes($sFullPath, '\\%_') . '/%');
+                    })
                     ->delete();
 
                 if ($this->getConfig('AllowTrash', true) && $sFirstPath !== self::$sTrashFolder) {
