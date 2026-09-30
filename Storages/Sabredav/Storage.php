@@ -179,6 +179,10 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
                 $oResult->AddAction([
                     'list' => []
                 ]);
+
+                if (!$bShared && strpos($sFilePath, '/' . \Aurora\Modules\PersonalFiles\Module::$sTrashFolder) === 0) {
+                    $aProps = $oItem->getProperties(['ExtendedProps']);
+                }
             }
 
             if ($oItem instanceof File) {
