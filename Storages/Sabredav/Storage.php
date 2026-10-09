@@ -498,7 +498,7 @@ class Storage extends \Aurora\Modules\PersonalFiles\Storages\Storage
         //     }
         //     $sFolderName = substr(md5($sFolderName), 0, $maxLength - strlen($extension)) . $extension;
         // }
-        
+
         $oDirectory = $this->getDirectory($iUserId, $sType, $sPath);
 
         if ($oDirectory instanceof \Sabre\DAVACL\IACL) {

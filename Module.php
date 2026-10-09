@@ -927,6 +927,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 ->where('Type', $aArgs['Type'])
                 ->where('FullPath', $sOldFullPath)
                 ->update(['FullPath' => $sNewFullPath]);
+            /** @var \Illuminate\Database\Eloquent\Collection<int, FavoriteFile> $aFavorites */
             $aFavorites = FavoriteFile::where('IdUser', $UserId)
                 ->where('Type', $aArgs['Type'])
                 ->where('FullPath', 'like', $sOldPrefix . '%')
@@ -1014,6 +1015,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                         ->where('Type', $aItem['FromType'])
                         ->where('FullPath', $sOldFullPath)
                         ->update(['Type' => $aArgs['ToType'], 'FullPath' => $sNewFullPath]);
+                    /** @var \Illuminate\Database\Eloquent\Collection<int, FavoriteFile> $aFavorites */
                     $aFavorites = FavoriteFile::where('IdUser', $UserId)
                         ->where('Type', $aItem['FromType'])
                         ->where('FullPath', 'like', $sOldPrefix . '%')
