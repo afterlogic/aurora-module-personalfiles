@@ -907,14 +907,15 @@ class Module extends \Aurora\System\Module\AbstractModule
             $UserId = $aArgs['UserId'];
             Api::CheckAccess($UserId);
 
-            if (!self::isFileAllowed($aArgs['Name'])) {
+            $sNewName = \trim(\MailSo\Base\Utils::ClearFileName($aArgs['NewName']));
+            // $sNewName = $this->getManager()->getNonExistentFileName($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $sNewName);
+
+            if (!self::isFileAllowed($aArgs['Name']) || !self::isFileAllowed($sNewName)) {
                 throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::CanNotUploadFileErrorData);
             }
 
             $sUserPiblicId = Api::getUserPublicIdById($UserId);
-            $sNewName = \trim(\MailSo\Base\Utils::ClearFileName($aArgs['NewName']));
 
-            //			$sNewName = $this->getManager()->getNonExistentFileName($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $sNewName);
             $bIsLink = isset($aArgs['IsLink']) ? $aArgs['IsLink'] : false;
             $mResult = $this->getManager()->rename($sUserPiblicId, $aArgs['Type'], $aArgs['Path'], $aArgs['Name'], $sNewName, $bIsLink);
 
@@ -994,7 +995,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 if (!$bIntoItself) {
                     $sNewName = isset($aItem['NewName']) ? $aItem['NewName'] : $aItem['Name'];
 
-                    if (!self::IsFileAllowed(basename($sNewName))) {
+                    if (!self::isFileAllowed(basename($sNewName))) {
                         throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::CanNotUploadFileErrorData);
                     }
 
